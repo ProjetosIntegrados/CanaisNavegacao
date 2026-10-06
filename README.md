@@ -1,11 +1,11 @@
-# Nome do projeto
+# CanaisNavegacao
 
 > [!WARNING]
 > Este projeto foi desenvolvido por estudantes no contexto de uma disciplina de graduação e possui finalidade exclusivamente educacional. Os resultados não foram necessariamente validados para uso profissional e devem ser utilizados com cautela e verificados independentemente.
 
 ## Descrição
 
-Descreva brevemente o problema abordado, o objetivo do projeto e suas principais funcionalidades.
+O CanaisNavegacao é uma ferramenta computacional desenvolvida em Python para análise e pré-dimensionamento de canais de navegação em águas rasas. O projeto busca avaliar a adequação de um canal às características da embarcação e às condições de navegação, considerando parâmetros geométricos e hidrodinâmicos.
 
 ## Instalação
 
@@ -44,7 +44,7 @@ poetry run pytest
 ```text
 .
 ├── src/
-│   └── nome_do_projeto/
+│   └── canais_navegacao
 ├── tests/
 ├── exemplos/
 ├── docs/
@@ -61,9 +61,9 @@ Descreva informações relevantes para desenvolver, modificar ou contribuir com 
 
 **Alunos**
 
-* Nome do aluno (semestre)
-* Nome do aluno (semestre)
-* Nome do aluno (semestre)
+* Bruno Carlotto Rezende (2026/2)
+
+
 
 **Professores orientadores**
 
