@@ -6,3 +6,9 @@ class Embarcacao:
         self.boca = boca
         self.calado = calado
         self.cb = cb
+
+    def __str__(self) -> str:
+        return (
+            f"Embarcação: Lpp={self.lpp} m, boca={self.boca} m, "
+            f"calado={self.calado} m, Cb={self.cb}"
+        )
