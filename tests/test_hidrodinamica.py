@@ -4,6 +4,10 @@ from canais_navegacao.hidrodinamica import (
     numero_froude_profundidade,
     relacao_profundidade_calado,
     area_secao_canal,
+    largura_topo_canal,
+    profundidade_media,
+    coeficiente_velocidade_critica,
+    velocidade_critica,
     fator_bloqueio,
     squat_barrass3,
     verificar_validade_barrass3,
@@ -30,13 +34,50 @@ def test_relacao_profundidade_calado():
 
 def test_area_secao_canal():
     resultado = area_secao_canal(
-        largura=100,
-        profundidade=12,
+        largura=80,
+        profundidade=11,
+        talude=3,
     )
 
-    assert resultado == pytest.approx(1200)
-    
+    assert resultado == pytest.approx(1243)
 
+
+def test_largura_topo_canal():
+    resultado = largura_topo_canal(
+        largura=80,
+        profundidade=11,
+        talude=3,
+    )
+
+    assert resultado == pytest.approx(146)
+
+
+def test_profundidade_media():
+    resultado = profundidade_media(
+        area_canal=1243,
+        largura_topo=146,
+    )
+
+    assert resultado == pytest.approx(8.5136986301)
+
+
+def test_coeficiente_velocidade_critica():
+    resultado = coeficiente_velocidade_critica(
+        bloqueio=0.10,
+    )
+
+    assert resultado == pytest.approx(0.6228144402)
+
+
+def test_velocidade_critica():
+    resultado = velocidade_critica(
+        coeficiente_critico=0.6228144402,
+        profundidade_media=8.5136986301,
+    )
+
+    assert resultado == pytest.approx(5.6918351513)
+
+        
 def test_fator_bloqueio():
     resultado = fator_bloqueio(
         area_navio=120,
