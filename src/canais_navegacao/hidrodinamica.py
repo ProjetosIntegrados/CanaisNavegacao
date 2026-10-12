@@ -14,9 +14,44 @@ def relacao_profundidade_calado(profundidade: float, calado: float) -> float:
     return profundidade / calado
 
 
-def area_secao_canal(largura: float, profundidade: float) -> float:
-    """Calcula a área da seção transversal de um canal retangular."""
-    return largura * profundidade
+def area_secao_canal(
+    largura: float,
+    profundidade: float,
+    talude: float = 0,
+) -> float:
+    """Calcula a área da seção transversal do canal."""
+    return largura * profundidade + talude * profundidade**2
+
+
+def largura_topo_canal(
+    largura: float,
+    profundidade: float,
+    talude: float,
+) -> float:
+    """Calcula a largura no topo da seção transversal do canal."""
+    return largura + 2 * talude * profundidade
+
+
+def profundidade_media(
+    area_canal: float,
+    largura_topo: float,
+) -> float:
+    """Calcula a profundidade média da água no canal."""
+    return area_canal / largura_topo
+
+
+def coeficiente_velocidade_critica(bloqueio: float) -> float:
+    """Calcula o coeficiente de velocidade crítica em canal restrito."""
+    return (2 * math.sin(math.asin(1 - bloqueio) / 3))**1.5
+
+
+def velocidade_critica(
+    coeficiente_critico: float,
+    profundidade_media: float,
+) -> float:
+    """Calcula a velocidade crítica em canal restrito."""
+    return coeficiente_critico * math.sqrt(GRAVIDADE * profundidade_media)
+
 
 def fator_bloqueio(area_navio: float, area_canal: float) -> float:
     """Calcula o fator de bloqueio entre a embarcação e o canal."""
