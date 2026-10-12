@@ -148,3 +148,38 @@ def verificar_validade_icorels(
         and 0.6 <= cb <= 0.8
         and froude_profundidade <= 0.7
     )
+
+
+def velocidade_equivalente_yoshimura(
+    velocidade: float,
+    bloqueio: float,
+    tipo_canal: str,
+) -> float:
+    """Calcula a velocidade equivalente utilizada pelo método de Yoshimura."""
+    if tipo_canal == "U":
+        return velocidade
+
+    if tipo_canal in ("R", "C"):
+        return velocidade / (1 - bloqueio)
+
+    raise ValueError("Tipo de canal deve ser U, R ou C.")
+
+
+def squat_yoshimura(
+    relacao_ht: float,
+    relacao_lb: float,
+    cb: float,
+    velocidade_equivalente: float,
+) -> float:
+    """Calcula o squat máximo na proa pelo método de Yoshimura."""
+    return (
+        (
+            (0.7 + 1.5 / relacao_ht)
+            * (cb / relacao_lb)
+            + 15
+            / relacao_ht
+            * (cb / relacao_lb) ** 3
+        )
+        * velocidade_equivalente**2
+        / GRAVIDADE
+    )
