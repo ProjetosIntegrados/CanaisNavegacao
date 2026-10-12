@@ -9,6 +9,21 @@ def numero_froude_profundidade(velocidade: float, profundidade: float) -> float:
     return velocidade / math.sqrt(GRAVIDADE * profundidade)
 
 
+def relacao_boca_calado(boca: float, calado: float) -> float:
+    """Calcula a relação entre a boca e o calado da embarcação."""
+    return boca / calado
+
+
+def relacao_comprimento_boca(lpp: float, boca: float) -> float:
+    """Calcula a relação entre o comprimento e a boca da embarcação."""
+    return lpp / boca
+
+
+def relacao_comprimento_calado(lpp: float, calado: float) -> float:
+    """Calcula a relação entre o comprimento e o calado da embarcação."""
+    return lpp / calado
+
+
 def relacao_profundidade_calado(profundidade: float, calado: float) -> float:
     """Calcula a relação entre a profundidade da água e o calado da embarcação."""
     return profundidade / calado
@@ -78,4 +93,58 @@ def verificar_validade_barrass3(
         1.1 <= relacao_ht <= 1.4
         and 0.10 <= bloqueio <= 0.25
         and 0.50 <= cb <= 0.85
+    )
+
+
+def coeficiente_squat_icorels(cb: float) -> float:
+    """Calcula o coeficiente Cs utilizado pelo método ICORELS."""
+    if cb < 0.7:
+        return 1.7
+    if cb < 0.8:
+        return 2.0
+    return 2.4
+
+
+def volume_deslocamento(
+    lpp: float,
+    boca: float,
+    calado: float,
+    cb: float,
+) -> float:
+    """Calcula o volume de deslocamento da embarcação."""
+    return cb * lpp * boca * calado
+
+
+def squat_icorels(
+    coeficiente_s: float,
+    volume_deslocamento: float,
+    lpp: float,
+    froude_profundidade: float,
+) -> float:
+    """Calcula o squat máximo pelo método ICORELS."""
+    return (
+        coeficiente_s
+        * volume_deslocamento
+        / lpp**2
+        * froude_profundidade**2
+        / math.sqrt(1 - froude_profundidade**2)
+    )
+
+
+def verificar_validade_icorels(
+    relacao_ht: float,
+    relacao_bt: float,
+    relacao_lb: float,
+    relacao_lt: float,
+    cb: float,
+    froude_profundidade: float,
+) -> bool:
+    """Verifica os limites básicos de aplicação do método ICORELS."""
+    return (
+        1.1 <= relacao_ht <= 2.0
+        and 2.19 <= relacao_bt <= 3.5
+        and 5.5 <= relacao_lb <= 8.5
+        and 16.1 <= relacao_lt <= 20.2
+        and 0.6 <= cb <= 0.8
+        and froude_profundidade <= 0.7
     )
