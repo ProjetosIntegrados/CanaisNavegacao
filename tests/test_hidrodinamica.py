@@ -18,6 +18,8 @@ from canais_navegacao.hidrodinamica import (
     relacao_boca_calado,
     relacao_comprimento_boca,
     relacao_comprimento_calado,
+    velocidade_equivalente_yoshimura,
+    squat_yoshimura,
 )
 
 
@@ -228,3 +230,51 @@ def test_relacao_comprimento_calado():
     )
 
     assert resultado == 20.0
+
+def test_velocidade_equivalente_yoshimura_canal_u():
+    velocidade_equivalente = velocidade_equivalente_yoshimura(
+        velocidade=5,
+        bloqueio=0.1,
+        tipo_canal="U",
+    )
+
+    assert velocidade_equivalente == 5  
+
+
+def test_velocidade_equivalente_yoshimura_canal_restrito():
+    velocidade_equivalente = velocidade_equivalente_yoshimura(
+        velocidade=5,
+        bloqueio=0.1,
+        tipo_canal="R",
+    )
+
+    assert velocidade_equivalente == pytest.approx(5.55556, abs=0.00001) 
+
+
+def test_squat_yoshimura():
+    relacao_ht = relacao_profundidade_calado(
+        profundidade=12,
+        calado=10,
+    )
+    relacao_lb = relacao_comprimento_boca(
+        lpp=200,
+        boca=30,
+    )
+
+    squat = squat_yoshimura(
+        relacao_ht=relacao_ht,
+        relacao_lb=relacao_lb,
+        cb=0.75,
+        velocidade_equivalente=5,
+    )
+
+    assert squat == pytest.approx(0.6044, abs=0.0001)
+
+
+def test_velocidade_equivalente_yoshimura_tipo_invalido():
+    with pytest.raises(ValueError):
+        velocidade_equivalente_yoshimura(
+            velocidade=5,
+            bloqueio=0.1,
+            tipo_canal="X",
+        )
