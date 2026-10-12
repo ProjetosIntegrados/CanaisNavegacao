@@ -11,6 +11,13 @@ from canais_navegacao.hidrodinamica import (
     fator_bloqueio,
     squat_barrass3,
     verificar_validade_barrass3,
+    coeficiente_squat_icorels,
+    volume_deslocamento,
+    squat_icorels,
+    verificar_validade_icorels,
+    relacao_boca_calado,
+    relacao_comprimento_boca,
+    relacao_comprimento_calado,
 )
 
 
@@ -115,3 +122,109 @@ def test_validade_barrass3_parametros_invalidos():
     )
 
     assert resultado is False    
+
+
+def test_coeficiente_squat_icorels():
+    assert coeficiente_squat_icorels(0.65) == 1.7
+    assert coeficiente_squat_icorels(0.75) == 2.0
+    assert coeficiente_squat_icorels(0.85) == 2.4    
+
+
+def test_volume_deslocamento():
+    volume = volume_deslocamento(
+        lpp=200,
+        boca=30,
+        calado=10,
+        cb=0.75,
+    )
+
+    assert volume == 45000    
+
+
+def test_squat_icorels():
+    cs = coeficiente_squat_icorels(0.75)
+    volume = volume_deslocamento(
+        lpp=200,
+        boca=30,
+        calado=10,
+        cb=0.75,
+    )
+    froude = numero_froude_profundidade(
+        velocidade=5,
+        profundidade=12,
+    )
+
+    squat = squat_icorels(
+        coeficiente_s=cs,
+        volume_deslocamento=volume,
+        lpp=200,
+        froude_profundidade=froude,
+    )
+
+    assert squat == pytest.approx(0.53841, abs=0.00001)
+
+
+def test_validade_icorels():
+    valido = verificar_validade_icorels(
+        relacao_ht=1.2,
+        relacao_bt=3.0,
+        relacao_lb=7.0,
+        relacao_lt=18.0,
+        cb=0.75,
+        froude_profundidade=0.5,
+    )
+
+    assert valido is True      
+
+
+def test_invalidade_icorels():
+    assert verificar_validade_icorels(
+        1.0, 3.0, 7.0, 18.0, 0.75, 0.5
+    ) is False
+
+    assert verificar_validade_icorels(
+        1.2, 2.0, 7.0, 18.0, 0.75, 0.5
+    ) is False
+
+    assert verificar_validade_icorels(
+        1.2, 3.0, 5.0, 18.0, 0.75, 0.5
+    ) is False
+
+    assert verificar_validade_icorels(
+        1.2, 3.0, 7.0, 15.0, 0.75, 0.5
+    ) is False
+
+    assert verificar_validade_icorels(
+        1.2, 3.0, 7.0, 18.0, 0.55, 0.5
+    ) is False
+
+    assert verificar_validade_icorels(
+        1.2, 3.0, 7.0, 18.0, 0.75, 0.8
+    ) is False    
+
+
+def test_relacao_boca_calado():
+    resultado = relacao_boca_calado(
+        boca=30,
+        calado=10,
+    )
+
+    assert resultado == 3.0    
+
+
+def test_relacao_comprimento_boca():
+    resultado = relacao_comprimento_boca(
+        lpp=200,
+        boca=30,
+    )
+
+    assert resultado == pytest.approx(6.66667, abs=0.00001)    
+
+
+def test_relacao_comprimento_calado():
+    resultado = relacao_comprimento_calado(
+        lpp=200,
+        calado=10,
+    )
+
+    assert resultado == 20.0
