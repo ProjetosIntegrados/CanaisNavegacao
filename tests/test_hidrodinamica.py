@@ -5,6 +5,7 @@ from canais_navegacao.hidrodinamica import (
     relacao_profundidade_calado,
     area_secao_canal,
     fator_bloqueio,
+    squat_barrass3,
 )
 
 
@@ -42,3 +43,13 @@ def test_fator_bloqueio():
     )
 
     assert resultado == pytest.approx(0.1)
+
+
+def test_squat_barrass3():
+    resultado = squat_barrass3(
+        velocidade_nos=10,
+        cb=0.75,
+        bloqueio=0.10,
+    )
+
+    assert resultado == pytest.approx(0.7481232568)

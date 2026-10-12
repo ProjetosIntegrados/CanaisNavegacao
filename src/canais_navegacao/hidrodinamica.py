@@ -21,3 +21,13 @@ def area_secao_canal(largura: float, profundidade: float) -> float:
 def fator_bloqueio(area_navio: float, area_canal: float) -> float:
     """Calcula o fator de bloqueio entre a embarcação e o canal."""
     return area_navio / area_canal
+
+
+def squat_barrass3(
+    velocidade_nos: float,
+    cb: float,
+    bloqueio: float,
+) -> float:
+    """Calcula o squat máximo pelo método Barrass3."""
+    k = 5.74 * bloqueio**0.76
+    return cb * velocidade_nos**2 * k / 100
