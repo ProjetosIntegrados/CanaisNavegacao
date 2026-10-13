@@ -183,3 +183,78 @@ def squat_yoshimura(
         * velocidade_equivalente**2
         / GRAVIDADE
     )
+
+
+def selecionar_squat_conservador(resultados: dict[str, float]) -> tuple[str, float]:
+    """Seleciona o maior squat entre os métodos aplicáveis."""
+    if not resultados:
+        raise ValueError("Nenhum método de squat aplicável.")
+
+    metodo = max(resultados, key=resultados.get)
+    return metodo, resultados[metodo]
+
+
+def calcular_squats_aplicaveis(
+    tipo_canal: str,
+    relacao_ht: float,
+    relacao_bt: float,
+    relacao_lb: float,
+    relacao_lt: float,
+    cb: float,
+    bloqueio: float,
+    froude_profundidade: float,
+    velocidade_ms: float,
+    velocidade_nos: float,
+    volume_deslocamento: float,
+    lpp: float,
+) -> dict[str, float]:
+    """Calcula o squat pelos métodos aplicáveis às condições informadas."""
+    resultados = {}
+
+    icorels_valido = verificar_validade_icorels(
+        relacao_ht=relacao_ht,
+        relacao_bt=relacao_bt,
+        relacao_lb=relacao_lb,
+        relacao_lt=relacao_lt,
+        cb=cb,
+        froude_profundidade=froude_profundidade,
+    )
+
+    if tipo_canal == "U" and icorels_valido:
+        resultados["ICORELS"] = squat_icorels(
+            coeficiente_s=coeficiente_squat_icorels(cb),
+            volume_deslocamento=volume_deslocamento,
+            lpp=lpp,
+            froude_profundidade=froude_profundidade,
+        )
+
+
+    barrass_valido = verificar_validade_barrass3(
+        relacao_ht=relacao_ht,
+        bloqueio=bloqueio,
+        cb=cb,
+    )
+
+    if tipo_canal in ("U", "R", "C") and barrass_valido:
+        resultados["Barrass3"] = squat_barrass3(
+            velocidade_nos=velocidade_nos,
+            cb=cb,
+            bloqueio=bloqueio,
+        )
+
+
+    if tipo_canal in ("U", "R", "C"):
+        velocidade_equivalente = velocidade_equivalente_yoshimura(
+            velocidade=velocidade_ms,
+            bloqueio=bloqueio,
+            tipo_canal=tipo_canal,
+        )
+
+        resultados["Yoshimura"] = squat_yoshimura(
+            relacao_ht=relacao_ht,
+            relacao_lb=relacao_lb,
+            cb=cb,
+            velocidade_equivalente=velocidade_equivalente,
+        )
+
+    return resultados                        

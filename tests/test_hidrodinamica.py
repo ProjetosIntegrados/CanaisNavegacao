@@ -20,6 +20,9 @@ from canais_navegacao.hidrodinamica import (
     relacao_comprimento_calado,
     velocidade_equivalente_yoshimura,
     squat_yoshimura,
+    selecionar_squat_conservador,
+    calcular_squats_aplicaveis,
+    selecionar_squat_conservador,
 )
 
 
@@ -278,3 +281,106 @@ def test_velocidade_equivalente_yoshimura_tipo_invalido():
             bloqueio=0.1,
             tipo_canal="X",
         )
+
+
+def test_selecionar_squat_conservador():
+    resultados = {
+        "ICORELS": 0.54,
+        "Barrass3": 0.62,
+        "Yoshimura": 0.60,
+    }
+
+    metodo, squat = selecionar_squat_conservador(resultados)
+
+    assert metodo == "Barrass3"
+    assert squat == pytest.approx(0.62) 
+
+
+def test_selecionar_squat_conservador_sem_metodos():
+    with pytest.raises(ValueError):
+        selecionar_squat_conservador({})       
+
+
+def test_calcular_squats_aplicaveis_tres_metodos():
+    resultados = calcular_squats_aplicaveis(
+        tipo_canal="U",
+        relacao_ht=1.2,
+        relacao_bt=3.0,
+        relacao_lb=6.67,
+        relacao_lt=20.0,
+        cb=0.75,
+        bloqueio=0.10,
+        froude_profundidade=0.46,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+        volume_deslocamento=45000,
+        lpp=200,
+    )
+
+    assert "ICORELS" in resultados
+    assert "Barrass3" in resultados
+    assert "Yoshimura" in resultados   
+
+
+def test_calcular_squats_aplicaveis_canal_restrito():
+    resultados = calcular_squats_aplicaveis(
+        tipo_canal="R",
+        relacao_ht=1.2,
+        relacao_bt=3.0,
+        relacao_lb=6.67,
+        relacao_lt=20.0,
+        cb=0.75,
+        bloqueio=0.10,
+        froude_profundidade=0.46,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+        volume_deslocamento=45000,
+        lpp=200,
+    )
+
+    assert "ICORELS" not in resultados
+    assert "Barrass3" in resultados
+    assert "Yoshimura" in resultados 
+
+
+def test_calcular_squats_aplicaveis_barrass_invalido():
+    resultados = calcular_squats_aplicaveis(
+        tipo_canal="U",
+        relacao_ht=1.6,
+        relacao_bt=3.0,
+        relacao_lb=6.67,
+        relacao_lt=20.0,
+        cb=0.75,
+        bloqueio=0.10,
+        froude_profundidade=0.46,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+        volume_deslocamento=45000,
+        lpp=200,
+    )
+
+    assert "ICORELS" in resultados
+    assert "Barrass3" not in resultados
+    assert "Yoshimura" in resultados 
+
+
+def test_selecao_conservadora_com_metodos_aplicaveis():
+    resultados = calcular_squats_aplicaveis(
+        tipo_canal="U",
+        relacao_ht=1.2,
+        relacao_bt=3.0,
+        relacao_lb=6.67,
+        relacao_lt=20.0,
+        cb=0.75,
+        bloqueio=0.10,
+        froude_profundidade=0.46,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+        volume_deslocamento=45000,
+        lpp=200,
+    )
+
+    metodo, squat = selecionar_squat_conservador(resultados)
+
+    assert squat == max(resultados.values())
+    assert metodo in resultados                   
