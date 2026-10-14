@@ -1,5 +1,8 @@
 import math
 
+from canais_navegacao.embarcacao import Embarcacao
+from canais_navegacao.canal import Canal
+
 
 GRAVIDADE = 9.81
 
@@ -302,3 +305,85 @@ def verificar_largura_efetiva_canal_irrestrito(
 ) -> bool:
     """Verifica a faixa de aplicação da expressão da largura efetiva."""
     return 1.10 <= relacao_ht <= 1.40
+
+
+def calcular_squat_na_profundidade(
+    profundidade: float,
+    embarcacao: Embarcacao,
+    canal: Canal,
+    area_navio: float,
+    velocidade_ms: float,
+    velocidade_nos: float,
+) -> tuple[str, float]:
+    """Calcula o squat conservador para uma profundidade candidata."""
+    relacao_ht = relacao_profundidade_calado(
+        profundidade,
+        embarcacao.calado,
+    )
+
+    relacao_bt = relacao_boca_calado(
+        embarcacao.boca,
+        embarcacao.calado,
+    )
+
+    relacao_lb = relacao_comprimento_boca(
+        embarcacao.lpp,
+        embarcacao.boca,
+    )
+
+    relacao_lt = relacao_comprimento_calado(
+        embarcacao.lpp,
+        embarcacao.calado,
+    )
+    froude_profundidade = numero_froude_profundidade(
+        velocidade_ms,
+        profundidade,
+    )
+    if canal.tipo == "U":
+        if not verificar_largura_efetiva_canal_irrestrito(relacao_ht):
+            raise ValueError(
+                "Relação h/T fora da faixa da expressão da largura efetiva."
+            )
+
+        largura_efetiva = largura_efetiva_canal_irrestrito(
+            embarcacao.boca,
+            embarcacao.cb,
+        )
+
+        area_canal = area_secao_canal(
+            largura_efetiva,
+            profundidade,
+        )
+    else:
+        area_canal = area_secao_canal(
+            canal.largura,
+            profundidade,
+            canal.talude,
+        )    
+    bloqueio = fator_bloqueio(
+        area_navio,
+        area_canal,
+    )
+    deslocamento = volume_deslocamento(
+        embarcacao.lpp,
+        embarcacao.boca,
+        embarcacao.calado,
+        embarcacao.cb,
+    )
+    resultados = calcular_squats_aplicaveis(
+        tipo_canal=canal.tipo,
+        relacao_ht=relacao_ht,
+        relacao_bt=relacao_bt,
+        relacao_lb=relacao_lb,
+        relacao_lt=relacao_lt,
+        cb=embarcacao.cb,
+        bloqueio=bloqueio,
+        froude_profundidade=froude_profundidade,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+        volume_deslocamento=deslocamento,
+        lpp=embarcacao.lpp,
+    )
+    metodo, squat = selecionar_squat_conservador(resultados)
+
+    return metodo, squat        

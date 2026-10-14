@@ -1,5 +1,8 @@
 import pytest
 
+from canais_navegacao.embarcacao import Embarcacao
+from canais_navegacao.canal import Canal
+
 from canais_navegacao.hidrodinamica import (
     numero_froude_profundidade,
     relacao_profundidade_calado,
@@ -28,6 +31,7 @@ from canais_navegacao.hidrodinamica import (
     funcao_profundidade_requerida,
     largura_efetiva_canal_irrestrito,
     verificar_largura_efetiva_canal_irrestrito,
+    calcular_squat_na_profundidade,
 )
 
 
@@ -438,4 +442,31 @@ def test_verificar_largura_efetiva_canal_irrestrito():
     assert verificar_largura_efetiva_canal_irrestrito(1.10) is True
     assert verificar_largura_efetiva_canal_irrestrito(1.25) is True
     assert verificar_largura_efetiva_canal_irrestrito(1.40) is True
-    assert verificar_largura_efetiva_canal_irrestrito(1.50) is False    
+    assert verificar_largura_efetiva_canal_irrestrito(1.50) is False  
+
+
+def test_calcular_squat_na_profundidade_canal_irrestrito():
+    embarcacao = Embarcacao(
+        lpp=200.0,
+        boca=30.0,
+        calado=10.0,
+        cb=0.75,
+    )
+
+    canal = Canal(
+        profundidade=12.0,
+        comprimento=1000.0,
+        tipo="U",
+    )
+
+    metodo, squat = calcular_squat_na_profundidade(
+        profundidade=12.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    assert metodo in ("ICORELS", "Barrass3", "Yoshimura")
+    assert squat > 0      
