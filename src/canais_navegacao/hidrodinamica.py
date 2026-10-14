@@ -387,3 +387,86 @@ def calcular_squat_na_profundidade(
     metodo, squat = selecionar_squat_conservador(resultados)
 
     return metodo, squat        
+
+
+def avaliar_profundidade(
+    profundidade: float,
+    embarcacao: Embarcacao,
+    canal: Canal,
+    area_navio: float,
+    velocidade_ms: float,
+    velocidade_nos: float,
+) -> float:
+    """Avalia a diferença entre a FAQ e a margem mínima em uma profundidade candidata."""
+    _, squat = calcular_squat_na_profundidade(
+        profundidade=profundidade,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=area_navio,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+    )
+    margem_minima = margem_manobrabilidade_minima(
+        embarcacao.calado,
+    )
+    return funcao_profundidade_requerida(
+        profundidade=profundidade,
+        calado=embarcacao.calado,
+        squat=squat,
+        margem_minima=margem_minima,
+    )
+
+
+def profundidade_requerida_bissecao(
+    profundidade_inferior: float,
+    profundidade_superior: float,
+    embarcacao: Embarcacao,
+    canal: Canal,
+    area_navio: float,
+    velocidade_ms: float,
+    velocidade_nos: float,
+    tolerancia: float = 0.001,
+) -> float:
+    """Calcula a profundidade requerida pelo método da bisseção."""
+    valor_inferior = avaliar_profundidade(
+        profundidade=profundidade_inferior,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=area_navio,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+    )
+
+    valor_superior = avaliar_profundidade(
+        profundidade=profundidade_superior,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=area_navio,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+    )
+    if valor_inferior * valor_superior > 0:
+        raise ValueError(
+            "O intervalo informado não contém uma raiz."
+        )
+    while profundidade_superior - profundidade_inferior > tolerancia:
+        profundidade_media = (
+            profundidade_inferior + profundidade_superior
+        ) / 2
+        valor_medio = avaliar_profundidade(
+            profundidade=profundidade_media,
+            embarcacao=embarcacao,
+            canal=canal,
+            area_navio=area_navio,
+            velocidade_ms=velocidade_ms,
+            velocidade_nos=velocidade_nos,
+        )
+        if valor_inferior * valor_medio <= 0:
+            profundidade_superior = profundidade_media
+            valor_superior = valor_medio
+        else:
+            profundidade_inferior = profundidade_media
+            valor_inferior = valor_medio
+    return (
+        profundidade_inferior + profundidade_superior
+    ) / 2

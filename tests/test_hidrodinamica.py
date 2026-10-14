@@ -32,6 +32,8 @@ from canais_navegacao.hidrodinamica import (
     largura_efetiva_canal_irrestrito,
     verificar_largura_efetiva_canal_irrestrito,
     calcular_squat_na_profundidade,
+    avaliar_profundidade,
+    profundidade_requerida_bissecao,
 )
 
 
@@ -470,3 +472,103 @@ def test_calcular_squat_na_profundidade_canal_irrestrito():
 
     assert metodo in ("ICORELS", "Barrass3", "Yoshimura")
     assert squat > 0      
+
+
+def test_avaliar_profundidade():
+    embarcacao = Embarcacao(
+        lpp=200.0,
+        boca=30.0,
+        calado=10.0,
+        cb=0.75,
+    )
+
+    canal = Canal(
+        profundidade=12.0,
+        comprimento=1000.0,
+        tipo="U",
+    )
+
+    resultado = avaliar_profundidade(
+        profundidade=12.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    assert resultado > 0    
+
+
+def test_intervalo_profundidade_requerida():
+    embarcacao = Embarcacao(
+        lpp=200.0,
+        boca=30.0,
+        calado=10.0,
+        cb=0.75,
+    )
+
+    canal = Canal(
+        profundidade=12.0,
+        comprimento=1000.0,
+        tipo="U",
+    )
+
+    valor_inferior = avaliar_profundidade(
+        profundidade=11.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    valor_superior = avaliar_profundidade(
+        profundidade=12.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    
+    assert valor_inferior < 0
+    assert valor_superior > 0
+
+
+def test_profundidade_requerida_bissecao():
+    embarcacao = Embarcacao(
+        lpp=200.0,
+        boca=30.0,
+        calado=10.0,
+        cb=0.75,
+    )
+
+    canal = Canal(
+        profundidade=12.0,
+        comprimento=1000.0,
+        tipo="U",
+    )
+
+    profundidade = profundidade_requerida_bissecao(
+        profundidade_inferior=11.0,
+        profundidade_superior=12.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    assert 11.0 < profundidade < 12.0       
+    resultado = avaliar_profundidade(
+        profundidade=profundidade,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+   
+    assert abs(resultado) < 0.001 
