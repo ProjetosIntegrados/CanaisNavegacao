@@ -287,3 +287,18 @@ def funcao_profundidade_requerida(
 ) -> float:
     """Calcula a diferença entre a FAQ e a Margem de Manobrabilidade mínima."""
     return profundidade - calado - squat - margem_minima
+
+
+def largura_efetiva_canal_irrestrito(
+    boca: float,
+    cb: float,
+) -> float:
+    """Calcula a largura efetiva de um canal irrestrito."""
+    return (7.04 / cb**0.85) * boca
+
+
+def verificar_largura_efetiva_canal_irrestrito(
+    relacao_ht: float,
+) -> bool:
+    """Verifica a faixa de aplicação da expressão da largura efetiva."""
+    return 1.10 <= relacao_ht <= 1.40

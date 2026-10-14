@@ -26,6 +26,8 @@ from canais_navegacao.hidrodinamica import (
     folga_abaixo_quilha,
     verificar_faq,
     funcao_profundidade_requerida,
+    largura_efetiva_canal_irrestrito,
+    verificar_largura_efetiva_canal_irrestrito,
 )
 
 
@@ -419,3 +421,21 @@ def test_funcao_profundidade_requerida():
     )
 
     assert resultado == pytest.approx(-0.02)                  
+
+
+def test_largura_efetiva_canal_irrestrito():
+    largura_efetiva = largura_efetiva_canal_irrestrito(
+        boca=30.0,
+        cb=0.75,
+    )
+
+    esperado = (7.04 / 0.75**0.85) * 30.0
+
+    assert largura_efetiva == pytest.approx(esperado)    
+
+
+def test_verificar_largura_efetiva_canal_irrestrito():
+    assert verificar_largura_efetiva_canal_irrestrito(1.10) is True
+    assert verificar_largura_efetiva_canal_irrestrito(1.25) is True
+    assert verificar_largura_efetiva_canal_irrestrito(1.40) is True
+    assert verificar_largura_efetiva_canal_irrestrito(1.50) is False    
