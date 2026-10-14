@@ -1,5 +1,8 @@
 import pytest
 
+from canais_navegacao.embarcacao import Embarcacao
+from canais_navegacao.canal import Canal
+
 from canais_navegacao.hidrodinamica import (
     numero_froude_profundidade,
     relacao_profundidade_calado,
@@ -20,10 +23,19 @@ from canais_navegacao.hidrodinamica import (
     relacao_comprimento_calado,
     velocidade_equivalente_yoshimura,
     squat_yoshimura,
-    selecionar_squat_conservador,
     calcular_squats_aplicaveis,
     selecionar_squat_conservador,
+    margem_manobrabilidade_minima,
+    folga_abaixo_quilha,
+    verificar_faq,
+    funcao_profundidade_requerida,
+    largura_efetiva_canal_irrestrito,
+    verificar_largura_efetiva_canal_irrestrito,
+    calcular_squat_na_profundidade,
+    avaliar_profundidade,
+    profundidade_requerida_bissecao,
 )
+
 
 
 def test_numero_froude_profundidade():
@@ -383,4 +395,180 @@ def test_selecao_conservadora_com_metodos_aplicaveis():
     metodo, squat = selecionar_squat_conservador(resultados)
 
     assert squat == max(resultados.values())
-    assert metodo in resultados                   
+    assert metodo in resultados     
+
+
+def test_margem_manobrabilidade_minima():
+    assert margem_manobrabilidade_minima(10.0) == pytest.approx(0.60)
+    assert margem_manobrabilidade_minima(14.0) == pytest.approx(0.70)
+
+
+def test_folga_abaixo_quilha():
+    faq = folga_abaixo_quilha(
+        profundidade=12.0,
+        calado=10.0,
+        squat=0.60,
+    )
+
+    assert faq == pytest.approx(1.40)
+
+
+def test_verificar_faq():
+    assert verificar_faq(1.40, 0.60) is True
+    assert verificar_faq(0.45, 0.60) is False    
+
+
+def test_funcao_profundidade_requerida():
+    resultado = funcao_profundidade_requerida(
+        profundidade=11.25,
+        calado=10.0,
+        squat=0.67,
+        margem_minima=0.60,
+    )
+
+    assert resultado == pytest.approx(-0.02)                  
+
+
+def test_largura_efetiva_canal_irrestrito():
+    largura_efetiva = largura_efetiva_canal_irrestrito(
+        boca=30.0,
+        cb=0.75,
+    )
+
+    esperado = (7.04 / 0.75**0.85) * 30.0
+
+    assert largura_efetiva == pytest.approx(esperado)    
+
+
+def test_verificar_largura_efetiva_canal_irrestrito():
+    assert verificar_largura_efetiva_canal_irrestrito(1.10) is True
+    assert verificar_largura_efetiva_canal_irrestrito(1.25) is True
+    assert verificar_largura_efetiva_canal_irrestrito(1.40) is True
+    assert verificar_largura_efetiva_canal_irrestrito(1.50) is False  
+
+
+def test_calcular_squat_na_profundidade_canal_irrestrito():
+    embarcacao = Embarcacao(
+        lpp=200.0,
+        boca=30.0,
+        calado=10.0,
+        cb=0.75,
+    )
+
+    canal = Canal(
+        profundidade=12.0,
+        comprimento=1000.0,
+        tipo="U",
+    )
+
+    metodo, squat = calcular_squat_na_profundidade(
+        profundidade=12.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    assert metodo in ("ICORELS", "Barrass3", "Yoshimura")
+    assert squat > 0      
+
+
+def test_avaliar_profundidade():
+    embarcacao = Embarcacao(
+        lpp=200.0,
+        boca=30.0,
+        calado=10.0,
+        cb=0.75,
+    )
+
+    canal = Canal(
+        profundidade=12.0,
+        comprimento=1000.0,
+        tipo="U",
+    )
+
+    resultado = avaliar_profundidade(
+        profundidade=12.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    assert resultado > 0    
+
+
+def test_intervalo_profundidade_requerida():
+    embarcacao = Embarcacao(
+        lpp=200.0,
+        boca=30.0,
+        calado=10.0,
+        cb=0.75,
+    )
+
+    canal = Canal(
+        profundidade=12.0,
+        comprimento=1000.0,
+        tipo="U",
+    )
+
+    valor_inferior = avaliar_profundidade(
+        profundidade=11.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    valor_superior = avaliar_profundidade(
+        profundidade=12.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    
+    assert valor_inferior < 0
+    assert valor_superior > 0
+
+
+def test_profundidade_requerida_bissecao():
+    embarcacao = Embarcacao(
+        lpp=200.0,
+        boca=30.0,
+        calado=10.0,
+        cb=0.75,
+    )
+
+    canal = Canal(
+        profundidade=12.0,
+        comprimento=1000.0,
+        tipo="U",
+    )
+
+    profundidade = profundidade_requerida_bissecao(
+        profundidade_inferior=11.0,
+        profundidade_superior=12.0,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+
+    assert 11.0 < profundidade < 12.0       
+    resultado = avaliar_profundidade(
+        profundidade=profundidade,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=120.0,
+        velocidade_ms=5.0,
+        velocidade_nos=10.0,
+    )
+   
+    assert abs(resultado) < 0.001 

@@ -1,5 +1,8 @@
 import math
 
+from canais_navegacao.embarcacao import Embarcacao
+from canais_navegacao.canal import Canal
+
 
 GRAVIDADE = 9.81
 
@@ -257,4 +260,213 @@ def calcular_squats_aplicaveis(
             velocidade_equivalente=velocidade_equivalente,
         )
 
-    return resultados                        
+    return resultados         
+
+
+def margem_manobrabilidade_minima(calado: float) -> float:
+    """Calcula a Margem de Manobrabilidade mínima recomendada pela NORMAM-224/DPC."""
+    return max(0.05 * calado, 0.60)
+
+
+def folga_abaixo_quilha(
+    profundidade: float,
+    calado: float,
+    squat: float,
+) -> float:
+    """Calcula a Folga Abaixo da Quilha considerando o squat."""
+    return profundidade - calado - squat
+
+
+def verificar_faq(faq: float, margem_minima: float) -> bool:
+    """Verifica se a FAQ atende à Margem de Manobrabilidade mínima."""
+    return faq >= margem_minima
+
+
+def funcao_profundidade_requerida(
+    profundidade: float,
+    calado: float,
+    squat: float,
+    margem_minima: float,
+) -> float:
+    """Calcula a diferença entre a FAQ e a Margem de Manobrabilidade mínima."""
+    return profundidade - calado - squat - margem_minima
+
+
+def largura_efetiva_canal_irrestrito(
+    boca: float,
+    cb: float,
+) -> float:
+    """Calcula a largura efetiva de um canal irrestrito."""
+    return (7.04 / cb**0.85) * boca
+
+
+def verificar_largura_efetiva_canal_irrestrito(
+    relacao_ht: float,
+) -> bool:
+    """Verifica a faixa de aplicação da expressão da largura efetiva."""
+    return 1.10 <= relacao_ht <= 1.40
+
+
+def calcular_squat_na_profundidade(
+    profundidade: float,
+    embarcacao: Embarcacao,
+    canal: Canal,
+    area_navio: float,
+    velocidade_ms: float,
+    velocidade_nos: float,
+) -> tuple[str, float]:
+    """Calcula o squat conservador para uma profundidade candidata."""
+    relacao_ht = relacao_profundidade_calado(
+        profundidade,
+        embarcacao.calado,
+    )
+
+    relacao_bt = relacao_boca_calado(
+        embarcacao.boca,
+        embarcacao.calado,
+    )
+
+    relacao_lb = relacao_comprimento_boca(
+        embarcacao.lpp,
+        embarcacao.boca,
+    )
+
+    relacao_lt = relacao_comprimento_calado(
+        embarcacao.lpp,
+        embarcacao.calado,
+    )
+    froude_profundidade = numero_froude_profundidade(
+        velocidade_ms,
+        profundidade,
+    )
+    if canal.tipo == "U":
+        if not verificar_largura_efetiva_canal_irrestrito(relacao_ht):
+            raise ValueError(
+                "Relação h/T fora da faixa da expressão da largura efetiva."
+            )
+
+        largura_efetiva = largura_efetiva_canal_irrestrito(
+            embarcacao.boca,
+            embarcacao.cb,
+        )
+
+        area_canal = area_secao_canal(
+            largura_efetiva,
+            profundidade,
+        )
+    else:
+        area_canal = area_secao_canal(
+            canal.largura,
+            profundidade,
+            canal.talude,
+        )    
+    bloqueio = fator_bloqueio(
+        area_navio,
+        area_canal,
+    )
+    deslocamento = volume_deslocamento(
+        embarcacao.lpp,
+        embarcacao.boca,
+        embarcacao.calado,
+        embarcacao.cb,
+    )
+    resultados = calcular_squats_aplicaveis(
+        tipo_canal=canal.tipo,
+        relacao_ht=relacao_ht,
+        relacao_bt=relacao_bt,
+        relacao_lb=relacao_lb,
+        relacao_lt=relacao_lt,
+        cb=embarcacao.cb,
+        bloqueio=bloqueio,
+        froude_profundidade=froude_profundidade,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+        volume_deslocamento=deslocamento,
+        lpp=embarcacao.lpp,
+    )
+    metodo, squat = selecionar_squat_conservador(resultados)
+
+    return metodo, squat        
+
+
+def avaliar_profundidade(
+    profundidade: float,
+    embarcacao: Embarcacao,
+    canal: Canal,
+    area_navio: float,
+    velocidade_ms: float,
+    velocidade_nos: float,
+) -> float:
+    """Avalia a diferença entre a FAQ e a margem mínima em uma profundidade candidata."""
+    _, squat = calcular_squat_na_profundidade(
+        profundidade=profundidade,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=area_navio,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+    )
+    margem_minima = margem_manobrabilidade_minima(
+        embarcacao.calado,
+    )
+    return funcao_profundidade_requerida(
+        profundidade=profundidade,
+        calado=embarcacao.calado,
+        squat=squat,
+        margem_minima=margem_minima,
+    )
+
+
+def profundidade_requerida_bissecao(
+    profundidade_inferior: float,
+    profundidade_superior: float,
+    embarcacao: Embarcacao,
+    canal: Canal,
+    area_navio: float,
+    velocidade_ms: float,
+    velocidade_nos: float,
+    tolerancia: float = 0.001,
+) -> float:
+    """Calcula a profundidade requerida pelo método da bisseção."""
+    valor_inferior = avaliar_profundidade(
+        profundidade=profundidade_inferior,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=area_navio,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+    )
+
+    valor_superior = avaliar_profundidade(
+        profundidade=profundidade_superior,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=area_navio,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+    )
+    if valor_inferior * valor_superior > 0:
+        raise ValueError(
+            "O intervalo informado não contém uma raiz."
+        )
+    while profundidade_superior - profundidade_inferior > tolerancia:
+        profundidade_media = (
+            profundidade_inferior + profundidade_superior
+        ) / 2
+        valor_medio = avaliar_profundidade(
+            profundidade=profundidade_media,
+            embarcacao=embarcacao,
+            canal=canal,
+            area_navio=area_navio,
+            velocidade_ms=velocidade_ms,
+            velocidade_nos=velocidade_nos,
+        )
+        if valor_inferior * valor_medio <= 0:
+            profundidade_superior = profundidade_media
+            valor_superior = valor_medio
+        else:
+            profundidade_inferior = profundidade_media
+            valor_inferior = valor_medio
+    return (
+        profundidade_inferior + profundidade_superior
+    ) / 2
