@@ -20,10 +20,14 @@ from canais_navegacao.hidrodinamica import (
     relacao_comprimento_calado,
     velocidade_equivalente_yoshimura,
     squat_yoshimura,
-    selecionar_squat_conservador,
     calcular_squats_aplicaveis,
     selecionar_squat_conservador,
+    margem_manobrabilidade_minima,
+    folga_abaixo_quilha,
+    verificar_faq,
+    funcao_profundidade_requerida,
 )
+
 
 
 def test_numero_froude_profundidade():
@@ -383,4 +387,35 @@ def test_selecao_conservadora_com_metodos_aplicaveis():
     metodo, squat = selecionar_squat_conservador(resultados)
 
     assert squat == max(resultados.values())
-    assert metodo in resultados                   
+    assert metodo in resultados     
+
+
+def test_margem_manobrabilidade_minima():
+    assert margem_manobrabilidade_minima(10.0) == pytest.approx(0.60)
+    assert margem_manobrabilidade_minima(14.0) == pytest.approx(0.70)
+
+
+def test_folga_abaixo_quilha():
+    faq = folga_abaixo_quilha(
+        profundidade=12.0,
+        calado=10.0,
+        squat=0.60,
+    )
+
+    assert faq == pytest.approx(1.40)
+
+
+def test_verificar_faq():
+    assert verificar_faq(1.40, 0.60) is True
+    assert verificar_faq(0.45, 0.60) is False    
+
+
+def test_funcao_profundidade_requerida():
+    resultado = funcao_profundidade_requerida(
+        profundidade=11.25,
+        calado=10.0,
+        squat=0.67,
+        margem_minima=0.60,
+    )
+
+    assert resultado == pytest.approx(-0.02)                  

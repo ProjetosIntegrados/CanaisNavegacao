@@ -257,4 +257,33 @@ def calcular_squats_aplicaveis(
             velocidade_equivalente=velocidade_equivalente,
         )
 
-    return resultados                        
+    return resultados         
+
+
+def margem_manobrabilidade_minima(calado: float) -> float:
+    """Calcula a Margem de Manobrabilidade mínima recomendada pela NORMAM-224/DPC."""
+    return max(0.05 * calado, 0.60)
+
+
+def folga_abaixo_quilha(
+    profundidade: float,
+    calado: float,
+    squat: float,
+) -> float:
+    """Calcula a Folga Abaixo da Quilha considerando o squat."""
+    return profundidade - calado - squat
+
+
+def verificar_faq(faq: float, margem_minima: float) -> bool:
+    """Verifica se a FAQ atende à Margem de Manobrabilidade mínima."""
+    return faq >= margem_minima
+
+
+def funcao_profundidade_requerida(
+    profundidade: float,
+    calado: float,
+    squat: float,
+    margem_minima: float,
+) -> float:
+    """Calcula a diferença entre a FAQ e a Margem de Manobrabilidade mínima."""
+    return profundidade - calado - squat - margem_minima
