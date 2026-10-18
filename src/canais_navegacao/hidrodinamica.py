@@ -470,3 +470,14 @@ def profundidade_requerida_bissecao(
     return (
         profundidade_inferior + profundidade_superior
     ) / 2
+
+
+def calcular_aprofundamento_dragagem(
+    profundidade_existente: float,
+    profundidade_requerida: float,
+) -> float:
+    """Calcula o aprofundamento necessário para adequação do canal."""
+    return max(
+        0.0,
+        profundidade_requerida - profundidade_existente,
+    )
