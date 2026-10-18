@@ -34,6 +34,7 @@ from canais_navegacao.hidrodinamica import (
     calcular_squat_na_profundidade,
     avaliar_profundidade,
     profundidade_requerida_bissecao,
+    calcular_aprofundamento_dragagem,
 )
 
 
@@ -572,3 +573,21 @@ def test_profundidade_requerida_bissecao():
     )
    
     assert abs(resultado) < 0.001 
+
+
+def test_calcular_aprofundamento_dragagem():
+    aprofundamento = calcular_aprofundamento_dragagem(
+        profundidade_existente=10.80,
+        profundidade_requerida=11.23,
+    )
+
+    assert aprofundamento == pytest.approx(0.43)
+
+
+def test_calcular_aprofundamento_sem_dragagem():
+    aprofundamento = calcular_aprofundamento_dragagem(
+        profundidade_existente=12.00,
+        profundidade_requerida=11.23,
+    )
+
+    assert aprofundamento == 0.0        
