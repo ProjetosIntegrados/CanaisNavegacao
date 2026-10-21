@@ -43,6 +43,23 @@ def profundidade_secao_projeto(
     return max(0.0, profundidade_talude)
 
 
+def pontos_mudanca_secao_projeto(
+    largura: float,
+    profundidade: float,
+    talude: float,
+) -> list[float]:
+    """Calcula os offsets dos pontos de mudança da seção de projeto."""
+    metade_largura = largura / 2
+    limite_talude = metade_largura + talude * profundidade
+
+    return [
+        -limite_talude,
+        -metade_largura,
+        metade_largura,
+        limite_talude,
+    ]
+
+
 def interpolar_profundidade(
     offset: float,
     offset_inicial: float,
@@ -56,6 +73,41 @@ def interpolar_profundidade(
         / (offset_final - offset_inicial)
         * (offset - offset_inicial)
     )
+
+
+def inserir_pontos_mudanca(
+    pontos: list[PontoBatimetrico],
+    pontos_mudanca: list[float],
+) -> list[PontoBatimetrico]:
+    """Insere pontos de mudança da seção de projeto na batimetria."""
+    novos_pontos = []
+
+    for indice in range(len(pontos) - 1):
+        ponto_inicial = pontos[indice]
+        ponto_final = pontos[indice + 1]
+
+        novos_pontos.append(ponto_inicial)
+
+        for offset in pontos_mudanca:
+            if ponto_inicial.offset < offset < ponto_final.offset:
+                profundidade = interpolar_profundidade(
+                    offset=offset,
+                    offset_inicial=ponto_inicial.offset,
+                    profundidade_inicial=ponto_inicial.profundidade,
+                    offset_final=ponto_final.offset,
+                    profundidade_final=ponto_final.profundidade,
+                )
+
+                novos_pontos.append(
+                    PontoBatimetrico(
+                        offset=offset,
+                        profundidade=profundidade,
+                    )
+                )
+
+    novos_pontos.append(pontos[-1])
+
+    return novos_pontos
 
 
 def encontrar_intersecao(
@@ -120,9 +172,20 @@ def calcular_area_dragagem_secao(
     """Calcula a área de dragagem de uma seção batimétrica."""
     area_total = 0.0
 
-    for indice in range(len(secao.pontos) - 1):
-        ponto_inicial = secao.pontos[indice]
-        ponto_final = secao.pontos[indice + 1]
+    pontos_mudanca = pontos_mudanca_secao_projeto(
+        largura=largura,
+        profundidade=profundidade,
+        talude=talude,
+    )
+
+    pontos = inserir_pontos_mudanca(
+        pontos=secao.pontos,
+        pontos_mudanca=pontos_mudanca,
+    )
+
+    for indice in range(len(pontos) - 1):
+        ponto_inicial = pontos[indice]
+        ponto_final = pontos[indice + 1]
 
         projeto_inicial = profundidade_secao_projeto(
             ponto_inicial.offset,
