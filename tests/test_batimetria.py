@@ -8,6 +8,7 @@ from canais_navegacao.batimetria import (
     encontrar_intersecao,
     area_dragagem_intervalo,
     calcular_area_dragagem_secao,
+    calcular_volume_dragagem_entre_secoes,
     
 )
 
@@ -207,4 +208,35 @@ def test_calcular_area_dragagem_secao_com_ponto_mudanca():
         talude=2,
     )
 
-    assert area == 24        
+    assert area == 24 
+
+
+def test_volume_dragagem_entre_secoes_areas_iguais():
+    volume = calcular_volume_dragagem_entre_secoes(
+        area_inicial=50,
+        area_final=50,
+        distancia=100,
+    )
+
+    assert volume == 5000
+
+
+def test_volume_dragagem_entre_secoes_areas_diferentes():
+    volume = calcular_volume_dragagem_entre_secoes(
+        area_inicial=50,
+        area_final=70,
+        distancia=100,
+    )
+
+    assert volume == 6000
+
+
+def test_volume_dragagem_entre_secoes_sem_dragagem():
+    volume = calcular_volume_dragagem_entre_secoes(
+        area_inicial=0,
+        area_final=0,
+        distancia=100,
+    )
+
+    assert volume == 0
+    

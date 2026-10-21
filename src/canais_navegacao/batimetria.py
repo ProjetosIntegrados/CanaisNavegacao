@@ -216,3 +216,17 @@ def calcular_area_dragagem_secao(
         )
 
     return area_total
+
+
+def calcular_volume_dragagem_entre_secoes(
+    area_inicial: float,
+    area_final: float,
+    distancia: float,
+) -> float:
+    """Calcula o volume de dragagem entre duas seções consecutivas."""
+    return (
+        (area_inicial + area_final)
+        / 2
+        * distancia
+    )
+
