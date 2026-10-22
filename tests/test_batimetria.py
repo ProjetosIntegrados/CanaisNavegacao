@@ -9,6 +9,7 @@ from canais_navegacao.batimetria import (
     area_dragagem_intervalo,
     calcular_area_dragagem_secao,
     calcular_volume_dragagem_entre_secoes,
+    calcular_volume_total_dragagem,
     
 )
 
@@ -239,4 +240,30 @@ def test_volume_dragagem_entre_secoes_sem_dragagem():
     )
 
     assert volume == 0
+
+
+def test_volume_total_dragagem_multiplas_secoes():
+    secoes = [
+        (0, 50),
+        (100, 70),
+        (220, 40),
+        (300, 0),
+    ]
+
+    volume_total = calcular_volume_total_dragagem(secoes)
+
+    assert volume_total == 14200    
+
+
+def test_volume_total_dragagem_com_trecho_sem_dragagem():
+    secoes = [
+        (0, 50),
+        (100, 0),
+        (200, 0),
+    ]
+
+    volume_total = calcular_volume_total_dragagem(secoes)
+
+    assert volume_total == 2500
+        
     

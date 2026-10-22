@@ -230,3 +230,25 @@ def calcular_volume_dragagem_entre_secoes(
         * distancia
     )
 
+def calcular_volume_total_dragagem(
+    secoes: list[tuple[float, float]],
+) -> float:
+    """Calcula o volume total de dragagem ao longo do canal."""
+    volume_total = 0.0
+
+
+    for indice in range(len(secoes) - 1):
+        distancia_inicial, area_inicial = secoes[indice]
+        distancia_final, area_final = secoes[indice + 1]
+
+        distancia = distancia_final - distancia_inicial  
+
+        volume = calcular_volume_dragagem_entre_secoes(
+            area_inicial=area_inicial,
+            area_final=area_final,
+            distancia=distancia,
+        )  
+        
+        volume_total += volume
+
+    return volume_total
