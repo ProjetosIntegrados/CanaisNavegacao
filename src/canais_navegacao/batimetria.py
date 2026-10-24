@@ -284,3 +284,26 @@ def calcular_volumes_dragagem_por_trecho(
         )
 
     return resultados    
+
+
+def identificar_trechos_dragagem(
+    resultados: list[tuple[float, float, float, float, float, float]],
+) -> list[tuple[float, float, bool]]:
+    """Identifica os trechos que necessitam de dragagem."""
+    trechos = []
+
+    for resultado in resultados:
+        distancia_inicial = resultado[0]
+        distancia_final = resultado[1]
+        volume = resultado[5]
+
+        necessita_dragagem = volume > 0
+
+        trechos.append(
+            (
+                distancia_inicial,
+                distancia_final,
+                necessita_dragagem,
+            )
+        )
+    return trechos

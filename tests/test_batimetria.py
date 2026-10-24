@@ -11,6 +11,7 @@ from canais_navegacao.batimetria import (
     calcular_volume_dragagem_entre_secoes,
     calcular_volume_total_dragagem,
     calcular_volumes_dragagem_por_trecho,
+    identificar_trechos_dragagem,
     
 )
 
@@ -298,4 +299,18 @@ def test_volumes_dragagem_por_trecho_sem_dragagem():
         (0, 100, 50, 0, 100, 2500),
         (100, 200, 0, 0, 100, 0),
     ]
-        
+
+
+def test_identificar_trechos_dragagem():
+    resultados = [
+        (0, 100, 50, 0, 100, 2500),
+        (100, 200, 0, 0, 100, 0),
+    ]
+
+    trechos = identificar_trechos_dragagem(resultados)
+
+    assert trechos == [
+        (0, 100, True),
+        (100, 200, False),
+    ]
+            
