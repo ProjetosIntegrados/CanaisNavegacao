@@ -1,3 +1,5 @@
+import pytest
+
 from canais_navegacao.batimetria import (
     PontoBatimetrico,
     SecaoBatimetrica,
@@ -12,6 +14,15 @@ from canais_navegacao.batimetria import (
     calcular_volume_total_dragagem,
     calcular_volumes_dragagem_por_trecho,
     identificar_trechos_dragagem,
+    calcular_deficit_profundidade,
+    ponto_dentro_largura_navegavel,
+    calcular_profundidade_disponivel,
+    analisar_secao_vertical,
+    analisar_secoes_verticais,
+    identificar_secao_critica,
+    analisar_secao_vertical_completa,
+    analisar_secoes_verticais_completas,
+    analisar_canal_vertical
     
 )
 
@@ -313,4 +324,317 @@ def test_identificar_trechos_dragagem():
         (0, 100, True),
         (100, 200, False),
     ]
-            
+
+
+def test_calcular_deficit_profundidade_insuficiente():
+    deficit = calcular_deficit_profundidade(
+        profundidade_disponivel=8.5,
+        profundidade_requerida=9.1,
+    )
+
+    assert deficit == pytest.approx(0.6)
+
+
+def test_calcular_deficit_profundidade_adequada():
+    deficit = calcular_deficit_profundidade(
+        profundidade_disponivel=9.4,
+        profundidade_requerida=9.1,
+    )
+
+    assert deficit == 0.0
+
+
+def test_ponto_dentro_largura_navegavel():
+    largura = 20.0
+
+    assert ponto_dentro_largura_navegavel(0.0, largura) is True
+    assert ponto_dentro_largura_navegavel(8.0, largura) is True
+    assert ponto_dentro_largura_navegavel(10.0, largura) is True
+    assert ponto_dentro_largura_navegavel(-10.0, largura) is True
+    assert ponto_dentro_largura_navegavel(15.0, largura) is False
+    assert ponto_dentro_largura_navegavel(-15.0, largura) is False
+
+
+def test_calcular_profundidade_disponivel():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0+100",
+        distancia=100.0,
+        pontos=[
+            PontoBatimetrico(-15.0, 6.0),
+            PontoBatimetrico(-10.0, 8.9),
+            PontoBatimetrico(0.0, 8.5),
+            PontoBatimetrico(10.0, 8.7),
+            PontoBatimetrico(15.0, 6.2),
+        ],
+    )
+
+    profundidade = calcular_profundidade_disponivel(
+        secao=secao,
+        largura=20.0,
+    )
+
+    assert profundidade == 8.5
+
+
+def test_calcular_profundidade_disponivel_com_interpolacao():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0+100",
+        distancia=100.0,
+        pontos=[
+            PontoBatimetrico(-15.0, 7.0),
+            PontoBatimetrico(-5.0, 9.0),
+            PontoBatimetrico(5.0, 9.0),
+            PontoBatimetrico(15.0, 8.0),
+        ],
+    )
+
+    profundidade = calcular_profundidade_disponivel(
+        secao=secao,
+        largura=20.0,
+    )
+
+    assert profundidade == pytest.approx(8.0)
+
+
+def test_analisar_secao_vertical_com_deficit():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0+100",
+        distancia=100.0,
+        pontos=[
+            PontoBatimetrico(-10.0, 8.9),
+            PontoBatimetrico(0.0, 8.5),
+            PontoBatimetrico(10.0, 8.7),
+        ],
+    )
+
+    resultado = analisar_secao_vertical(
+        secao=secao,
+        largura=20.0,
+        profundidade_requerida=9.1,
+    )
+
+    assert resultado[0] == "Estaca 0+100"
+    assert resultado[1] == 100.0
+    assert resultado[2] == 8.5
+    assert resultado[3] == 9.1
+    assert resultado[4] == pytest.approx(0.6)
+    assert resultado[5] is True
+
+
+def test_analisar_secao_vertical_adequada():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0+200",
+        distancia=200.0,
+        pontos=[
+            PontoBatimetrico(-10.0, 9.4),
+            PontoBatimetrico(0.0, 9.6),
+            PontoBatimetrico(10.0, 9.5),
+        ],
+    )
+
+    resultado = analisar_secao_vertical(
+        secao=secao,
+        largura=20.0,
+        profundidade_requerida=9.1,
+    )
+
+    assert resultado[2] == 9.4
+    assert resultado[4] == 0.0
+    assert resultado[5] is False
+
+
+def test_analisar_secoes_verticais():
+    secoes = [
+        SecaoBatimetrica(
+            identificacao="Estaca 0+000",
+            distancia=0.0,
+            pontos=[
+                PontoBatimetrico(-10.0, 9.4),
+                PontoBatimetrico(0.0, 9.6),
+                PontoBatimetrico(10.0, 9.5),
+            ],
+        ),
+        SecaoBatimetrica(
+            identificacao="Estaca 0+100",
+            distancia=100.0,
+            pontos=[
+                PontoBatimetrico(-10.0, 8.9),
+                PontoBatimetrico(0.0, 8.7),
+                PontoBatimetrico(10.0, 8.8),
+            ],
+        ),
+        SecaoBatimetrica(
+            identificacao="Estaca 0+220",
+            distancia=220.0,
+            pontos=[
+                PontoBatimetrico(-10.0, 8.5),
+                PontoBatimetrico(0.0, 8.3),
+                PontoBatimetrico(10.0, 8.4),
+            ],
+        ),
+    ]
+
+    resultados = analisar_secoes_verticais(
+        secoes=secoes,
+        largura=20.0,
+        profundidade_requerida=9.1,
+    )
+
+    assert len(resultados) == 3
+
+    assert resultados[0][0] == "Estaca 0+000"
+    assert resultados[0][2] == 9.4
+    assert resultados[0][4] == 0.0
+    assert resultados[0][5] is False
+
+    assert resultados[1][0] == "Estaca 0+100"
+    assert resultados[1][2] == 8.7
+    assert resultados[1][4] == pytest.approx(0.4)
+    assert resultados[1][5] is True
+
+    assert resultados[2][0] == "Estaca 0+220"
+    assert resultados[2][2] == 8.3
+    assert resultados[2][4] == pytest.approx(0.8)
+    assert resultados[2][5] is True
+
+
+def test_identificar_secao_critica():
+    resultados = [
+        ("Estaca 0+000", 0.0, 9.4, 9.1, 0.0, False),
+        ("Estaca 0+100", 100.0, 8.7, 9.1, 0.4, True),
+        ("Estaca 0+220", 220.0, 8.3, 9.1, 0.8, True),
+    ]
+
+    secao_critica = identificar_secao_critica(resultados)
+
+    assert secao_critica[0] == "Estaca 0+220"
+    assert secao_critica[1] == 220.0
+    assert secao_critica[2] == 8.3
+    assert secao_critica[3] == 9.1
+    assert secao_critica[4] == pytest.approx(0.8)
+    assert secao_critica[5] is True
+
+
+def test_analisar_secao_vertical_completa():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0+100",
+        distancia=100.0,
+        pontos=[
+            PontoBatimetrico(-20.0, 8.0),
+            PontoBatimetrico(-10.0, 8.5),
+            PontoBatimetrico(0.0, 8.5),
+            PontoBatimetrico(10.0, 8.5),
+            PontoBatimetrico(20.0, 8.0),
+        ],
+    )
+
+    resultado = analisar_secao_vertical_completa(
+        secao=secao,
+        largura=20.0,
+        profundidade_requerida=9.0,
+        talude=2.0,
+    )
+
+    assert resultado[0] == "Estaca 0+100"
+    assert resultado[1] == 100.0
+    assert resultado[2] == 8.5
+    assert resultado[3] == 9.0
+    assert resultado[4] == pytest.approx(0.5)
+    assert resultado[5] is True
+    assert resultado[6] > 0.0
+
+
+def test_analisar_secoes_verticais_completas():
+    secoes = [
+        SecaoBatimetrica(
+            identificacao="Estaca 0+000",
+            distancia=0.0,
+            pontos=[
+                PontoBatimetrico(-20.0, 9.5),
+                PontoBatimetrico(-10.0, 9.4),
+                PontoBatimetrico(0.0, 9.6),
+                PontoBatimetrico(10.0, 9.5),
+                PontoBatimetrico(20.0, 9.0),
+            ],
+        ),
+        SecaoBatimetrica(
+            identificacao="Estaca 0+100",
+            distancia=100.0,
+            pontos=[
+                PontoBatimetrico(-20.0, 8.0),
+                PontoBatimetrico(-10.0, 8.5),
+                PontoBatimetrico(0.0, 8.5),
+                PontoBatimetrico(10.0, 8.5),
+                PontoBatimetrico(20.0, 8.0),
+            ],
+        ),
+    ]
+
+    resultados = analisar_secoes_verticais_completas(
+        secoes=secoes,
+        largura=20.0,
+        profundidade_requerida=9.0,
+        talude=2.0,
+    )
+
+    assert len(resultados) == 2
+
+    assert resultados[0][0] == "Estaca 0+000"
+    assert resultados[0][1] == 0.0
+    assert resultados[0][4] == 0.0
+    assert resultados[0][5] is False
+
+    assert resultados[1][0] == "Estaca 0+100"
+    assert resultados[1][1] == 100.0
+    assert resultados[1][2] == 8.5
+    assert resultados[1][4] == pytest.approx(0.5)
+    assert resultados[1][5] is True
+    assert resultados[1][6] > 0.0
+
+
+def test_analisar_canal_vertical():
+    secoes = [
+        SecaoBatimetrica(
+            "Estaca 0+000",
+            0.0,
+            [
+                PontoBatimetrico(-20.0, 9.5),
+                PontoBatimetrico(-10.0, 9.4),
+                PontoBatimetrico(0.0, 9.6),
+                PontoBatimetrico(10.0, 9.5),
+                PontoBatimetrico(20.0, 9.0),
+            ],
+        ),
+        SecaoBatimetrica(
+            "Estaca 0+100",
+            100.0,
+            [
+                PontoBatimetrico(-20.0, 8.0),
+                PontoBatimetrico(-10.0, 8.5),
+                PontoBatimetrico(0.0, 8.5),
+                PontoBatimetrico(10.0, 8.5),
+                PontoBatimetrico(20.0, 8.0),
+            ],
+        ),
+    ]
+
+    resultado = analisar_canal_vertical(
+        secoes=secoes,
+        largura=20.0,
+        profundidade_requerida=9.0,
+        talude=2.0,
+    )
+
+    resultados_secoes = resultado[0]
+    volumes_trechos = resultado[1]
+    trechos_dragagem = resultado[2]
+    secao_critica = resultado[3]
+    volume_total = resultado[4]
+
+    assert len(resultados_secoes) == 2
+    assert len(volumes_trechos) == 1
+    assert len(trechos_dragagem) == 1
+    assert secao_critica[0] == "Estaca 0+100"
+    assert secao_critica[4] == pytest.approx(0.5)
+    assert volume_total > 0.0
+    

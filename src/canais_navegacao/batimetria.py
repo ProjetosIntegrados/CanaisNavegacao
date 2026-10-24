@@ -307,3 +307,231 @@ def identificar_trechos_dragagem(
             )
         )
     return trechos
+
+
+def calcular_deficit_profundidade(
+    profundidade_disponivel: float,
+    profundidade_requerida: float,
+) -> float:
+    """Calcula o déficit de profundidade da seção."""
+    return max(
+        0.0,
+        profundidade_requerida - profundidade_disponivel,
+    )
+
+
+def ponto_dentro_largura_navegavel(
+    offset: float,
+    largura: float,
+) -> bool:
+    """Verifica se um ponto está dentro da largura navegável."""
+    metade_largura = largura / 2
+
+    return -metade_largura <= offset <= metade_largura
+
+
+def calcular_profundidade_disponivel(
+    secao: SecaoBatimetrica,
+    largura: float,
+) -> float:
+    """Calcula a menor profundidade dentro da largura navegável."""
+    metade_largura = largura / 2
+
+    pontos = inserir_pontos_mudanca(
+        pontos=secao.pontos,
+        pontos_mudanca=[
+            -metade_largura,
+            metade_largura,
+        ],
+    )
+
+    profundidades = []
+
+    for ponto in pontos:
+        if ponto_dentro_largura_navegavel(
+            offset=ponto.offset,
+            largura=largura,
+        ):
+            profundidades.append(ponto.profundidade)
+
+    return min(profundidades)
+
+
+def analisar_secao_vertical(
+    secao: SecaoBatimetrica,
+    largura: float,
+    profundidade_requerida: float,
+) -> tuple[str, float, float, float, float, bool]:
+    """Analisa a condição vertical de uma seção batimétrica."""
+    profundidade_disponivel = calcular_profundidade_disponivel(
+        secao=secao,
+        largura=largura,
+    )
+
+    deficit = calcular_deficit_profundidade(
+        profundidade_disponivel=profundidade_disponivel,
+        profundidade_requerida=profundidade_requerida,
+    )
+
+    necessita_dragagem = deficit > 0
+
+    return (
+        secao.identificacao,
+        secao.distancia,
+        profundidade_disponivel,
+        profundidade_requerida,
+        deficit,
+        necessita_dragagem,
+    )
+
+
+def analisar_secoes_verticais(
+    secoes: list[SecaoBatimetrica],
+    largura: float,
+    profundidade_requerida: float,
+) -> list[tuple[str, float, float, float, float, bool]]:
+    """Analisa a condição vertical das seções ao longo do canal."""
+    resultados = []
+
+    for secao in secoes:
+        resultado = analisar_secao_vertical(
+            secao=secao,
+            largura=largura,
+            profundidade_requerida=profundidade_requerida,
+        )
+
+        resultados.append(resultado)
+
+    return resultados
+
+
+def identificar_secao_critica(
+    resultados: list[tuple[str, float, float, float, float, bool]],
+) -> tuple[str, float, float, float, float, bool]:
+    """Identifica a seção com o maior déficit de profundidade."""
+    return max(
+        resultados,
+        key=lambda resultado: resultado[4],
+    )
+
+
+def analisar_secao_vertical_completa(
+    secao: SecaoBatimetrica,
+    largura: float,
+    profundidade_requerida: float,
+    talude: float,
+) -> tuple[str, float, float, float, float, bool, float]:
+    """Analisa a condição vertical e a área de dragagem da seção."""
+    resultado = analisar_secao_vertical(
+        secao=secao,
+        largura=largura,
+        profundidade_requerida=profundidade_requerida,
+    )
+
+    area_dragagem = calcular_area_dragagem_secao(
+        secao=secao,
+        largura=largura,
+        profundidade=profundidade_requerida,
+        talude=talude,
+    )
+
+    return (
+        resultado[0],
+        resultado[1],
+        resultado[2],
+        resultado[3],
+        resultado[4],
+        resultado[5],
+        area_dragagem,
+    )
+
+
+def analisar_secoes_verticais_completas(
+    secoes: list[SecaoBatimetrica],
+    largura: float,
+    profundidade_requerida: float,
+    talude: float,
+) -> list[tuple[str, float, float, float, float, bool, float]]:
+    """Analisa a condição vertical e a área de dragagem das seções."""
+    resultados = []
+
+    for secao in secoes:
+        resultado = analisar_secao_vertical_completa(
+            secao=secao,
+            largura=largura,
+            profundidade_requerida=profundidade_requerida,
+            talude=talude,
+        )
+
+        resultados.append(resultado)
+
+    return resultados
+
+
+def preparar_secoes_para_calculo_volume(
+    resultados: list[
+        tuple[str, float, float, float, float, bool, float]
+    ],
+) -> list[tuple[float, float]]:
+    """Prepara distância e área das seções para o cálculo de volume."""
+    secoes_volume = []
+
+    for resultado in resultados:
+        distancia = resultado[1]
+        area_dragagem = resultado[6]
+
+        secoes_volume.append(
+            (
+                distancia,
+                area_dragagem,
+            )
+        )
+
+    return secoes_volume
+
+
+def analisar_canal_vertical(
+    secoes: list[SecaoBatimetrica],
+    largura: float,
+    profundidade_requerida: float,
+    talude: float,
+) -> tuple:
+    """Executa a análise vertical completa do canal."""
+    resultados_secoes = analisar_secoes_verticais_completas(
+        secoes=secoes,
+        largura=largura,
+        profundidade_requerida=profundidade_requerida,
+        talude=talude,
+    )
+
+    secoes_volume = preparar_secoes_para_calculo_volume(
+        resultados=resultados_secoes,
+    )
+
+    volumes_trechos = calcular_volumes_dragagem_por_trecho(
+        secoes=secoes_volume,
+    )
+
+    trechos_dragagem = identificar_trechos_dragagem(
+        resultados=volumes_trechos,
+    )
+
+    volume_total = calcular_volume_total_dragagem(
+        secoes=secoes_volume,
+    )
+
+    secao_critica = identificar_secao_critica(
+        resultados=[
+            resultado[:6]
+            for resultado in resultados_secoes
+        ],
+    )
+
+    return (
+        resultados_secoes,
+        volumes_trechos,
+        trechos_dragagem,
+        secao_critica,
+        volume_total,
+    )
+
