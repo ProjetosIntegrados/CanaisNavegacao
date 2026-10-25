@@ -15,6 +15,8 @@ from canais_navegacao.dimensionamento_horizontal import (
     calcular_largura_manobra,
     calcular_folga_margem,
     calcular_largura_canal_mao_unica,
+    calcular_largura_passagem,
+    calcular_largura_canal_mao_dupla,
 )
 
 
@@ -401,4 +403,55 @@ def test_calcular_largura_canal_mao_unica():
     )
 
     assert resultado == pytest.approx(84.0)
+
+
+def test_largura_passagem_canal_abrigado():
+    resultado = calcular_largura_passagem(
+        boca=20,
+        velocidade_navio="moderada",
+        canal_abrigado=True,
+    )
+
+    assert resultado == pytest.approx(28.0)
+
+
+def test_largura_passagem_canal_desabrigado():
+    resultado = calcular_largura_passagem(
+        boca=20,
+        velocidade_navio="moderada",
+        canal_abrigado=False,
+    )
+
+    assert resultado == pytest.approx(32.0)
+
+
+def test_largura_passagem_velocidade_alta():
+    resultado = calcular_largura_passagem(
+        boca=20,
+        velocidade_navio="alta",
+        canal_abrigado=False,
+    )
+
+    assert resultado == pytest.approx(40.0)
+
+
+def test_largura_passagem_velocidade_baixa():
+    resultado = calcular_largura_passagem(
+        boca=20,
+        velocidade_navio="baixa",
+        canal_abrigado=True,
+    )
+
+    assert resultado == pytest.approx(20.0)
+
+
+def test_calcular_largura_canal_mao_dupla():
+    resultado = calcular_largura_canal_mao_dupla(
+        largura_manobra=60.0,
+        folga_margem_esquerda=10.0,
+        folga_margem_direita=14.0,
+        largura_passagem=28.0,
+    )
+
+    assert resultado == pytest.approx(172.0)
     
