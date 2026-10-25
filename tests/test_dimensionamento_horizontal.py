@@ -17,6 +17,13 @@ from canais_navegacao.dimensionamento_horizontal import (
     calcular_largura_canal_mao_unica,
     calcular_largura_passagem,
     calcular_largura_canal_mao_dupla,
+    calcular_largura_adicional_deriva,
+    calcular_largura_adicional_tempo_resposta,
+    calcular_largura_adicional_curva,
+    calcular_largura_canal_curva,
+    calcular_raio_recomendado_curva,
+    calcular_raio_minimo_curva,
+    verificar_raio_curva,
 )
 
 
@@ -454,4 +461,139 @@ def test_calcular_largura_canal_mao_dupla():
     )
 
     assert resultado == pytest.approx(172.0)
+
+
+def test_largura_adicional_deriva_navio_convencional():
+    resultado = calcular_largura_adicional_deriva(
+        comprimento=200.0,
+        raio_curva=1000.0,
+    )
+
+    assert resultado == pytest.approx(5.0)
+
+
+def test_largura_adicional_deriva_navio_grande_deslocamento():
+    resultado = calcular_largura_adicional_deriva(
+        comprimento=200.0,
+        raio_curva=1000.0,
+        navio_grande_deslocamento=True,
+    )
+
+    assert resultado == pytest.approx(8.8888889)
+
+
+def test_largura_adicional_tempo_resposta():
+    resultado = calcular_largura_adicional_tempo_resposta(
+        boca=20.0,
+    )
+
+    assert resultado == pytest.approx(8.0)
+
+
+def test_largura_adicional_curva():
+    resultado = calcular_largura_adicional_curva(
+        largura_adicional_deriva=5.0,
+        largura_adicional_tempo_resposta=8.0,
+    )
+
+    assert resultado == pytest.approx(13.0)
+
+
+def test_largura_canal_curva():
+    resultado = calcular_largura_canal_curva(
+        largura_canal_reto=100.0,
+        largura_adicional_curva=13.0,
+    )
+
+    assert resultado == pytest.approx(113.0)
+
+
+def test_raio_recomendado_curva_por_tipo_navio():
+    casos = {
+        "carga": 5.0,
+        "carga_pequeno": 6.0,
+        "conteineiro_pos_panamax": 7.0,
+        "conteineiro_panamax": 6.0,
+        "graneleiro_muito_grande": 6.0,
+        "graneleiro_panamax": 6.0,
+        "graneleiro_pequeno": 5.0,
+        "vlcc": 5.0,
+        "petroleiro_pequeno": 5.0,
+        "gnl": 4.0,
+        "carga_refrigerada": 5.0,
+        "passageiro": 4.0,
+        "balsa": 5.0,
+    }
+
+    for tipo_navio, fator in casos.items():
+        resultado = calcular_raio_recomendado_curva(
+            comprimento=200.0,
+            tipo_navio=tipo_navio,
+        )
+
+        assert resultado == pytest.approx(fator * 200.0)
+
+
+def test_raio_minimo_curva_angulo_ate_25():
+    resultado = calcular_raio_minimo_curva(
+        comprimento=200.0,
+        angulo_deflexao=20.0,
+        tipo_navio="carga",
+    )
+
+    assert resultado == pytest.approx(600.0)
+
+
+def test_raio_minimo_curva_angulo_maior_25():
+    resultado = calcular_raio_minimo_curva(
+        comprimento=200.0,
+        angulo_deflexao=30.0,
+        tipo_navio="carga",
+    )
+
+    assert resultado == pytest.approx(1000.0)
+
+
+def test_raio_curva_atende_angulo_ate_25():
+    resultado = verificar_raio_curva(
+        raio_curva=601.0,
+        comprimento=200.0,
+        angulo_deflexao=20.0,
+        tipo_navio="carga",
+    )
+
+    assert resultado is True
+
+
+def test_raio_curva_nao_atende_igual_ao_minimo():
+    resultado = verificar_raio_curva(
+        raio_curva=600.0,
+        comprimento=200.0,
+        angulo_deflexao=20.0,
+        tipo_navio="carga",
+    )
+
+    assert resultado is False
+
+
+def test_raio_curva_atende_angulo_maior_25():
+    resultado = verificar_raio_curva(
+        raio_curva=1001.0,
+        comprimento=200.0,
+        angulo_deflexao=30.0,
+        tipo_navio="carga",
+    )
+
+    assert resultado is True
+
+
+def test_raio_curva_nao_atende_tabela():
+    resultado = verificar_raio_curva(
+        raio_curva=1000.0,
+        comprimento=200.0,
+        angulo_deflexao=30.0,
+        tipo_navio="carga",
+    )
+
+    assert resultado is False
     
