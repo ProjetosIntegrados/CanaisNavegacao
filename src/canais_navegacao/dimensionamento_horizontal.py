@@ -275,3 +275,40 @@ def calcular_largura_canal_mao_unica(
         + folga_margem_esquerda
         + folga_margem_direita
     )
+
+
+def calcular_largura_passagem(
+    boca: float,
+    velocidade_navio: str,
+    canal_abrigado: bool,
+) -> float:
+    """Calcula WP para canal com duas faixas de navegação."""
+    if canal_abrigado:
+        fatores = {
+            "alta": 1.8,
+            "moderada": 1.4,
+            "baixa": 1.0,
+        }
+    else:
+        fatores = {
+            "alta": 2.0,
+            "moderada": 1.6,
+            "baixa": 1.2,
+        }
+
+    return fatores[velocidade_navio] * boca
+
+
+def calcular_largura_canal_mao_dupla(
+    largura_manobra: float,
+    folga_margem_esquerda: float,
+    folga_margem_direita: float,
+    largura_passagem: float,
+) -> float:
+    """Calcula a largura requerida para canal de mão dupla."""
+    return (
+        2 * largura_manobra
+        + folga_margem_esquerda
+        + folga_margem_direita
+        + largura_passagem
+    )
