@@ -233,3 +233,45 @@ def calcular_largura_manobra(
 ) -> float:
     """Calcula a largura de manobra WM."""
     return wbm + sum(fatores)
+
+
+def calcular_folga_margem(
+    boca: float,
+    tipo_margem: str,
+    velocidade_navio: str,
+) -> float:
+    """Calcula a folga de segurança associada a uma margem do canal."""
+    fatores = {
+        "inclinada_suave": {
+            "alta": 0.2,
+            "moderada": 0.1,
+            "baixa": 0.0,
+        },
+        "inclinada_ingreme": {
+            "alta": 0.7,
+            "moderada": 0.5,
+            "baixa": 0.3,
+        },
+        "vertical": {
+            "alta": 1.3,
+            "moderada": 1.0,
+            "baixa": 0.5,
+        },
+    }
+
+    fator = fatores[tipo_margem][velocidade_navio]
+
+    return fator * boca
+
+
+def calcular_largura_canal_mao_unica(
+    largura_manobra: float,
+    folga_margem_esquerda: float,
+    folga_margem_direita: float,
+) -> float:
+    """Calcula a largura requerida para canal de mão única."""
+    return (
+        largura_manobra
+        + folga_margem_esquerda
+        + folga_margem_direita
+    )

@@ -13,6 +13,8 @@ from canais_navegacao.dimensionamento_horizontal import (
     calcular_fator_carga_perigosa,
     calcular_fator_intensidade_trafego,
     calcular_largura_manobra,
+    calcular_folga_margem,
+    calcular_largura_canal_mao_unica,
 )
 
 
@@ -349,4 +351,54 @@ def test_calcular_largura_manobra():
     )
 
     assert resultado == pytest.approx(73.0)
+
+
+def test_folga_margem_inclinada_suave():
+    resultado = calcular_folga_margem(
+        boca=20,
+        tipo_margem="inclinada_suave",
+        velocidade_navio="moderada",
+    )
+
+    assert resultado == pytest.approx(2.0)
+
+
+def test_folga_margem_inclinada_ingreme():
+    resultado = calcular_folga_margem(
+        boca=20,
+        tipo_margem="inclinada_ingreme",
+        velocidade_navio="moderada",
+    )
+
+    assert resultado == pytest.approx(10.0)
+
+
+def test_folga_margem_vertical():
+    resultado = calcular_folga_margem(
+        boca=20,
+        tipo_margem="vertical",
+        velocidade_navio="moderada",
+    )
+
+    assert resultado == pytest.approx(20.0)
+
+
+def test_folga_margem_velocidade_baixa():
+    resultado = calcular_folga_margem(
+        boca=20,
+        tipo_margem="inclinada_suave",
+        velocidade_navio="baixa",
+    )
+
+    assert resultado == pytest.approx(0.0)
+
+
+def test_calcular_largura_canal_mao_unica():
+    resultado = calcular_largura_canal_mao_unica(
+        largura_manobra=60.0,
+        folga_margem_esquerda=10.0,
+        folga_margem_direita=14.0,
+    )
+
+    assert resultado == pytest.approx(84.0)
     
