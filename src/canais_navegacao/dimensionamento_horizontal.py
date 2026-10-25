@@ -312,3 +312,98 @@ def calcular_largura_canal_mao_dupla(
         + folga_margem_direita
         + largura_passagem
     )
+
+
+def calcular_largura_adicional_deriva(
+    comprimento: float,
+    raio_curva: float,
+    navio_grande_deslocamento: bool = False,
+) -> float:
+    """Calcula a largura adicional em curva devido ao desvio de trajetória."""
+    if navio_grande_deslocamento:
+        fator = 4.5
+    else:
+        fator = 8.0
+
+    return comprimento**2 / (fator * raio_curva)
+
+
+def calcular_largura_adicional_tempo_resposta(
+    boca: float,
+) -> float:
+    """Calcula a largura adicional em curva devido ao tempo de resposta."""
+    return 0.4 * boca
+
+
+def calcular_largura_adicional_curva(
+    largura_adicional_deriva: float,
+    largura_adicional_tempo_resposta: float,
+) -> float:
+    """Calcula a largura adicional total em curva."""
+    return (
+        largura_adicional_deriva
+        + largura_adicional_tempo_resposta
+    )
+
+
+def calcular_largura_canal_curva(
+    largura_canal_reto: float,
+    largura_adicional_curva: float,
+) -> float:
+    """Calcula a largura requerida do canal em curva."""
+    return largura_canal_reto + largura_adicional_curva
+
+
+def calcular_raio_recomendado_curva(
+    comprimento: float,
+    tipo_navio: str,
+) -> float:
+    """Calcula o raio recomendado da curva conforme o tipo de navio."""
+    fatores = {
+        "carga": 5.0,
+        "carga_pequeno": 6.0,
+        "conteineiro_pos_panamax": 7.0,
+        "conteineiro_panamax": 6.0,
+        "graneleiro_muito_grande": 6.0,
+        "graneleiro_panamax": 6.0,
+        "graneleiro_pequeno": 5.0,
+        "vlcc": 5.0,
+        "petroleiro_pequeno": 5.0,
+        "gnl": 4.0,
+        "carga_refrigerada": 5.0,
+        "passageiro": 4.0,
+        "balsa": 5.0,
+    }
+
+    return fatores[tipo_navio] * comprimento
+
+
+def calcular_raio_minimo_curva(
+    comprimento: float,
+    angulo_deflexao: float,
+    tipo_navio: str,
+) -> float:
+    """Calcula o raio de referência para verificação da curva."""
+    if angulo_deflexao <= 25:
+        return 3.0 * comprimento
+
+    return calcular_raio_recomendado_curva(
+        comprimento=comprimento,
+        tipo_navio=tipo_navio,
+    )
+
+
+def verificar_raio_curva(
+    raio_curva: float,
+    comprimento: float,
+    angulo_deflexao: float,
+    tipo_navio: str,
+) -> bool:
+    """Verifica se o raio da curva atende ao critério recomendado."""
+    raio_minimo = calcular_raio_minimo_curva(
+        comprimento=comprimento,
+        angulo_deflexao=angulo_deflexao,
+        tipo_navio=tipo_navio,
+    )
+
+    return raio_curva > raio_minimo
