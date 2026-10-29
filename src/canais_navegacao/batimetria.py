@@ -535,3 +535,198 @@ def analisar_canal_vertical(
         volume_total,
     )
 
+
+def encontrar_offset_profundidade(
+    offset_inicial: float,
+    profundidade_inicial: float,
+    offset_final: float,
+    profundidade_final: float,
+    profundidade_requerida: float,
+) -> float:
+    """Calcula o offset onde o perfil atinge a profundidade requerida."""
+    return offset_inicial + (
+        (profundidade_requerida - profundidade_inicial)
+        / (profundidade_final - profundidade_inicial)
+        * (offset_final - offset_inicial)
+    )
+
+
+def encontrar_limite_esquerdo_navegavel(
+    secao: SecaoBatimetrica,
+    profundidade_requerida: float,
+) -> float:
+    """Encontra o limite esquerdo da faixa navegável que contém o eixo."""
+    pontos = secao.pontos
+
+    for indice in range(len(pontos) - 2, -1, -1):
+        ponto_inicial = pontos[indice]
+        ponto_final = pontos[indice + 1]
+
+        if ponto_final.offset > 0:
+            continue
+
+        if (
+            ponto_inicial.profundidade < profundidade_requerida
+            <= ponto_final.profundidade
+        ):
+            return encontrar_offset_profundidade(
+                offset_inicial=ponto_inicial.offset,
+                profundidade_inicial=ponto_inicial.profundidade,
+                offset_final=ponto_final.offset,
+                profundidade_final=ponto_final.profundidade,
+                profundidade_requerida=profundidade_requerida,
+            )
+
+    raise ValueError(
+        "Nao foi encontrado limite esquerdo para a faixa navegavel."
+    )
+
+
+def encontrar_limite_direito_navegavel(
+    secao: SecaoBatimetrica,
+    profundidade_requerida: float,
+) -> float:
+    """Encontra o limite direito da faixa navegável que contém o eixo."""
+    pontos = secao.pontos
+
+    for indice in range(len(pontos) - 1):
+        ponto_inicial = pontos[indice]
+        ponto_final = pontos[indice + 1]
+
+        if ponto_inicial.offset < 0:
+            continue
+
+        if (
+            ponto_inicial.profundidade >= profundidade_requerida
+            > ponto_final.profundidade
+        ):
+            return encontrar_offset_profundidade(
+                offset_inicial=ponto_inicial.offset,
+                profundidade_inicial=ponto_inicial.profundidade,
+                offset_final=ponto_final.offset,
+                profundidade_final=ponto_final.profundidade,
+                profundidade_requerida=profundidade_requerida,
+            )
+
+    raise ValueError(
+        "Nao foi encontrado limite direito para a faixa navegavel."
+    )
+
+
+def calcular_largura_disponivel(
+    secao: SecaoBatimetrica,
+    profundidade_requerida: float,
+) -> float:
+    """Calcula a largura disponível da faixa navegável que contém o eixo."""
+    pontos = secao.pontos
+
+    for indice in range(len(pontos) - 1):
+        ponto_inicial = pontos[indice]
+        ponto_final = pontos[indice + 1]
+
+        if ponto_inicial.offset == 0.0:
+            profundidade_eixo = ponto_inicial.profundidade
+            break
+
+        if ponto_inicial.offset < 0.0 < ponto_final.offset:
+            profundidade_eixo = interpolar_profundidade(
+                offset=0.0,
+                offset_inicial=ponto_inicial.offset,
+                profundidade_inicial=ponto_inicial.profundidade,
+                offset_final=ponto_final.offset,
+                profundidade_final=ponto_final.profundidade,
+            )
+            break
+    else:
+        if pontos[-1].offset == 0.0:
+            profundidade_eixo = pontos[-1].profundidade
+        else:
+            raise ValueError(
+                "O eixo do canal nao esta contido na secao batimetrica."
+            )
+
+    if profundidade_eixo < profundidade_requerida:
+        raise ValueError(
+            "O eixo do canal nao possui profundidade suficiente."
+        )
+
+    limite_esquerdo = encontrar_limite_esquerdo_navegavel(
+        secao=secao,
+        profundidade_requerida=profundidade_requerida,
+    )
+
+    limite_direito = encontrar_limite_direito_navegavel(
+        secao=secao,
+        profundidade_requerida=profundidade_requerida,
+    )
+
+    return limite_direito - limite_esquerdo
+
+
+def calcular_deficit_largura(
+    largura_disponivel: float,
+    largura_requerida: float,
+) -> float:
+    """Calcula o déficit de largura da seção."""
+    return max(
+        0.0,
+        largura_requerida - largura_disponivel,
+    )
+
+
+def analisar_secao_horizontal(
+    secao: SecaoBatimetrica,
+    profundidade_requerida: float,
+    largura_requerida: float,
+) -> tuple[str, float, float, float, float, bool]:
+    """Analisa a condição horizontal de uma seção batimétrica."""
+    largura_disponivel = calcular_largura_disponivel(
+        secao=secao,
+        profundidade_requerida=profundidade_requerida,
+    )
+
+    deficit = calcular_deficit_largura(
+        largura_disponivel=largura_disponivel,
+        largura_requerida=largura_requerida,
+    )
+
+    atende = deficit == 0
+
+    return (
+        secao.identificacao,
+        secao.distancia,
+        largura_disponivel,
+        largura_requerida,
+        deficit,
+        atende,
+    )
+
+
+def analisar_secoes_horizontais(
+    secoes: list[SecaoBatimetrica],
+    profundidade_requerida: float,
+    largura_requerida: float,
+) -> list[tuple[str, float, float, float, float, bool]]:
+    """Analisa a condição horizontal das seções ao longo do canal."""
+    resultados = []
+
+    for secao in secoes:
+        resultado = analisar_secao_horizontal(
+            secao=secao,
+            profundidade_requerida=profundidade_requerida,
+            largura_requerida=largura_requerida,
+        )
+
+        resultados.append(resultado)
+
+    return resultados
+
+
+def identificar_secao_critica_horizontal(
+    resultados: list[tuple[str, float, float, float, float, bool]],
+) -> tuple[str, float, float, float, float, bool]:
+    """Identifica a seção com o maior déficit de largura."""
+    return max(
+        resultados,
+        key=lambda resultado: resultado[4],
+    )
