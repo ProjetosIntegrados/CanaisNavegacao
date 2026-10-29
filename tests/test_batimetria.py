@@ -22,8 +22,16 @@ from canais_navegacao.batimetria import (
     identificar_secao_critica,
     analisar_secao_vertical_completa,
     analisar_secoes_verticais_completas,
-    analisar_canal_vertical
-    
+    analisar_canal_vertical,
+    encontrar_offset_profundidade,
+    encontrar_limite_esquerdo_navegavel,
+    encontrar_limite_direito_navegavel,
+    calcular_largura_disponivel,
+    calcular_deficit_largura,
+    analisar_secao_horizontal,
+    analisar_secoes_horizontais,
+    identificar_secao_critica_horizontal,
+
 )
 
 def test_criar_ponto_batimetrico():
@@ -637,4 +645,257 @@ def test_analisar_canal_vertical():
     assert secao_critica[0] == "Estaca 0+100"
     assert secao_critica[4] == pytest.approx(0.5)
     assert volume_total > 0.0
+
+
+def test_encontrar_offset_profundidade():
+    resultado = encontrar_offset_profundidade(
+        offset_inicial=-40.0,
+        profundidade_inicial=8.0,
+        offset_final=-20.0,
+        profundidade_final=11.0,
+        profundidade_requerida=10.0,
+    )
+
+    assert resultado == pytest.approx(-26.6666667)
+
+
+def test_encontrar_limite_esquerdo_navegavel():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-60.0, 4.0),
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(20.0, 11.0),
+            PontoBatimetrico(40.0, 8.0),
+            PontoBatimetrico(60.0, 4.0),
+        ],
+    )
+
+    resultado = encontrar_limite_esquerdo_navegavel(
+        secao=secao,
+        profundidade_requerida=10.0,
+    )
+
+    assert resultado == pytest.approx(-26.6666667)
+
+
+def test_encontrar_limite_direito_navegavel():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-60.0, 4.0),
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(20.0, 11.0),
+            PontoBatimetrico(40.0, 8.0),
+            PontoBatimetrico(60.0, 4.0),
+        ],
+    )
+
+    resultado = encontrar_limite_direito_navegavel(
+        secao=secao,
+        profundidade_requerida=10.0,
+    )
+
+    assert resultado == pytest.approx(26.6666667)
+
+
+def test_calcular_largura_disponivel():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-60.0, 4.0),
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(20.0, 11.0),
+            PontoBatimetrico(40.0, 8.0),
+            PontoBatimetrico(60.0, 4.0),
+        ],
+    )
+
+    resultado = calcular_largura_disponivel(
+        secao=secao,
+        profundidade_requerida=10.0,
+    )
+
+    assert resultado == pytest.approx(53.3333333)
+
+
+def test_calcular_deficit_largura():
+    resultado = calcular_deficit_largura(
+        largura_disponivel=90.0,
+        largura_requerida=110.0,
+    )
+
+    assert resultado == pytest.approx(20.0)
+
+
+def test_calcular_deficit_largura_sem_deficit():
+    resultado = calcular_deficit_largura(
+        largura_disponivel=120.0,
+        largura_requerida=110.0,
+    )
+
+    assert resultado == pytest.approx(0.0)
+
+
+def test_analisar_secao_horizontal():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-60.0, 4.0),
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(20.0, 11.0),
+            PontoBatimetrico(40.0, 8.0),
+            PontoBatimetrico(60.0, 4.0),
+        ],
+    )
+
+    resultado = analisar_secao_horizontal(
+        secao=secao,
+        profundidade_requerida=10.0,
+        largura_requerida=60.0,
+    )
+
+    assert resultado[0] == "Estaca 0"
+    assert resultado[1] == pytest.approx(0.0)
+    assert resultado[2] == pytest.approx(53.3333333)
+    assert resultado[3] == pytest.approx(60.0)
+    assert resultado[4] == pytest.approx(6.6666667)
+    assert resultado[5] is False
+
+
+def test_analisar_secoes_horizontais():
+    secao_1 = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(20.0, 11.0),
+            PontoBatimetrico(40.0, 8.0),
+        ],
+    )
+
+    secao_2 = SecaoBatimetrica(
+        identificacao="Estaca 1",
+        distancia=500.0,
+        pontos=[
+            PontoBatimetrico(-50.0, 8.0),
+            PontoBatimetrico(-30.0, 11.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(30.0, 11.0),
+            PontoBatimetrico(50.0, 8.0),
+        ],
+    )
+
+    resultados = analisar_secoes_horizontais(
+        secoes=[secao_1, secao_2],
+        profundidade_requerida=10.0,
+        largura_requerida=60.0,
+    )
+
+    assert len(resultados) == 2
+
+    assert resultados[0][0] == "Estaca 0"
+    assert resultados[0][1] == pytest.approx(0.0)
+    assert resultados[0][2] == pytest.approx(53.3333333)
+    assert resultados[0][4] == pytest.approx(6.6666667)
+    assert resultados[0][5] is False
+
+    assert resultados[1][0] == "Estaca 1"
+    assert resultados[1][1] == pytest.approx(500.0)
+    assert resultados[1][2] == pytest.approx(73.3333333)
+    assert resultados[1][4] == pytest.approx(0.0)
+    assert resultados[1][5] is True
+
+
+def test_identificar_secao_critica_horizontal():
+    resultados = [
+        ("Estaca 0", 0.0, 53.0, 60.0, 7.0, False),
+        ("Estaca 1", 500.0, 45.0, 60.0, 15.0, False),
+        ("Estaca 2", 1000.0, 70.0, 60.0, 0.0, True),
+    ]
+
+    resultado = identificar_secao_critica_horizontal(
+        resultados=resultados,
+    )
+
+    assert resultado[0] == "Estaca 1"
+    assert resultado[4] == pytest.approx(15.0)
+
+
+def test_largura_disponivel_considera_faixa_contendo_eixo():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-80.0, 8.0),
+            PontoBatimetrico(-60.0, 11.0),
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(20.0, 11.0),
+            PontoBatimetrico(40.0, 8.0),
+        ],
+    )
+
+    resultado = calcular_largura_disponivel(
+        secao=secao,
+        profundidade_requerida=10.0,
+    )
+
+    assert resultado == pytest.approx(53.3333333)
+
+
+def test_largura_disponivel_eixo_sem_profundidade_suficiente():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(0.0, 8.0),
+            PontoBatimetrico(20.0, 11.0),
+            PontoBatimetrico(40.0, 8.0),
+        ],
+    )
+
+    with pytest.raises(ValueError):
+        calcular_largura_disponivel(
+            secao=secao,
+            profundidade_requerida=10.0,
+        )
+
+
+
+def test_largura_disponivel_sem_ponto_exatamente_no_eixo():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(10.0, 12.0),
+            PontoBatimetrico(40.0, 8.0),
+        ],
+    )
+
+    resultado = calcular_largura_disponivel(
+        secao=secao,
+        profundidade_requerida=10.0,
+    )
+
+    assert resultado == pytest.approx(51.6666667)
     
