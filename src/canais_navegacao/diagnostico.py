@@ -40,3 +40,23 @@ def diagnosticar_secao(
         atende_horizontal,
         atende_geral,
     )
+
+
+def diagnosticar_canal(
+    secoes: list[SecaoBatimetrica],
+    largura_requerida: float,
+    profundidade_requerida: float,
+) -> list[tuple]:
+    """Executa o diagnóstico integrado das seções do canal."""
+    resultados = []
+
+    for secao in secoes:
+        resultado = diagnosticar_secao(
+            secao=secao,
+            largura_requerida=largura_requerida,
+            profundidade_requerida=profundidade_requerida,
+        )
+
+        resultados.append(resultado)
+
+    return resultados
