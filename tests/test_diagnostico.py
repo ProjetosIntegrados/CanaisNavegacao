@@ -4,7 +4,10 @@ from canais_navegacao.batimetria import (
     PontoBatimetrico,
     SecaoBatimetrica,
 )
-from canais_navegacao.diagnostico import diagnosticar_secao
+from canais_navegacao.diagnostico import (
+    diagnosticar_canal,
+    diagnosticar_secao,
+)
 
 
 def test_diagnosticar_secao():
@@ -55,4 +58,39 @@ def test_diagnosticar_secao_nao_atende():
     assert resultado[5] is False
     assert resultado[9] is False
     assert resultado[10] is False
-    
+
+
+def test_diagnosticar_canal():
+    secao_1 = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(20.0, 11.0),
+            PontoBatimetrico(40.0, 8.0),
+        ],
+    )
+
+    secao_2 = SecaoBatimetrica(
+        identificacao="Estaca 1",
+        distancia=500.0,
+        pontos=[
+            PontoBatimetrico(-40.0, 7.0),
+            PontoBatimetrico(-20.0, 9.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(20.0, 9.0),
+            PontoBatimetrico(40.0, 7.0),
+        ],
+    )
+
+    resultados = diagnosticar_canal(
+        secoes=[secao_1, secao_2],
+        largura_requerida=40.0,
+        profundidade_requerida=10.0,
+    )
+
+    assert len(resultados) == 2
+    assert resultados[0][10] is True
+    assert resultados[1][10] is False
