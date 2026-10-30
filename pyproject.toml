@@ -9,6 +9,7 @@ packages = [{ include = "canais_navegacao", from = "src" }]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.14"
+matplotlib = "^3.11.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=8,<9"
