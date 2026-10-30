@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from canais_navegacao.batimetria import (
     SecaoBatimetrica,
     calcular_area_dragagem_secao,
+    calcular_profundidade_disponivel,
     inserir_pontos_mudanca,
     pontos_mudanca_secao_projeto,
     profundidade_secao_projeto,
@@ -87,4 +88,72 @@ def plotar_secao_transversal(
     plt.gca().invert_yaxis()
 
     plt.show()
+
+
+def plotar_perfil_longitudinal(
+    secoes: list[SecaoBatimetrica],
+    largura: float,
+    profundidade_requerida: float,
+) -> None:
+    """Plota o perfil longitudinal de profundidade do canal."""
+    distancias = []
+    profundidades_disponiveis = []
+
+    for secao in secoes:
+        profundidade_disponivel = calcular_profundidade_disponivel(
+            secao=secao,
+            largura=largura,
+        )
+
+        distancias.append(secao.distancia)
+        profundidades_disponiveis.append(profundidade_disponivel)
+
+    profundidades_requeridas = [
+        profundidade_requerida
+        for _ in secoes
+    ]
+
+    plt.plot(
+        distancias,
+        profundidades_disponiveis,
+        marker="o",
+        label="Profundidade disponível",
+    )
+
+    plt.plot(
+        distancias,
+        profundidades_requeridas,
+        label="Profundidade requerida",
+    )
+
+    plt.fill_between(
+        distancias,
+        profundidades_disponiveis,
+        profundidades_requeridas,
+        where=[
+            disponivel < profundidade_requerida
+            for disponivel in profundidades_disponiveis
+        ],
+        interpolate=True,
+        alpha=0.3,
+        label="Deficiência de profundidade",
+    )
+
+    plt.xlabel("Distância ao longo do canal (m)")
     
+    plt.xticks(
+    distancias,
+    [
+        f"{secao.identificacao}\n{secao.distancia:.0f} m"
+        for secao in secoes
+    ],
+)
+    
+    plt.ylabel("Profundidade (m)")
+    plt.title("Perfil longitudinal do canal")
+    plt.legend()
+    plt.grid()
+
+    plt.gca().invert_yaxis()
+
+    plt.show()
