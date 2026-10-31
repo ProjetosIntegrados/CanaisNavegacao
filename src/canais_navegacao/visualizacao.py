@@ -4,8 +4,11 @@ from canais_navegacao.batimetria import (
     SecaoBatimetrica,
     calcular_area_dragagem_secao,
     calcular_profundidade_disponivel,
+    calcular_volume_total_dragagem,
+    calcular_volumes_dragagem_por_trecho,
     inserir_pontos_mudanca,
     pontos_mudanca_secao_projeto,
+    preparar_secoes_para_calculo_volume,
     profundidade_secao_projeto,
 )
 
@@ -157,3 +160,73 @@ def plotar_perfil_longitudinal(
     plt.gca().invert_yaxis()
 
     plt.show()
+
+
+def plotar_volumes_dragagem(
+    resultados_secoes: list[
+        tuple[str, float, float, float, float, bool, float]
+    ],
+) -> None:
+    """Plota os volumes de dragagem por trecho e acumulado."""
+    secoes_volume = preparar_secoes_para_calculo_volume(
+        resultados=resultados_secoes,
+    )
+
+    volumes_trechos = calcular_volumes_dragagem_por_trecho(
+        secoes=secoes_volume,
+    )
+
+    volume_total = calcular_volume_total_dragagem(
+        secoes=secoes_volume,
+    )
+
+    volumes = []
+    volumes_acumulados = []
+    rotulos = []
+    acumulado = 0.0
+
+    for indice, trecho in enumerate(volumes_trechos):
+        volume = trecho[5]
+        acumulado += volume
+
+        volumes.append(volume)
+        volumes_acumulados.append(acumulado)
+
+        rotulos.append(
+            f"{resultados_secoes[indice][0]} - "
+            f"{resultados_secoes[indice + 1][0]}"
+        )
+
+    posicoes = range(len(volumes))
+
+    plt.bar(
+        posicoes,
+        volumes,
+        label="Volume por trecho",
+    )
+
+    plt.plot(
+        posicoes,
+        volumes_acumulados,
+        marker="o",
+        label="Volume acumulado",
+    )
+
+    plt.xticks(
+        posicoes,
+        rotulos,
+        rotation=45,
+        ha="right",
+    )
+
+    plt.xlabel("Trecho do canal")
+    plt.ylabel("Volume de dragagem (m³)")
+    plt.title(
+        "Volumes de dragagem do canal\n"
+        f"Volume total: {volume_total:.2f} m³"
+    )
+    plt.legend()
+    plt.grid()
+    plt.tight_layout()
+    plt.show()
+    

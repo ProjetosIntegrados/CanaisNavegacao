@@ -11,6 +11,7 @@ from canais_navegacao.batimetria import (
 from canais_navegacao.visualizacao import (
     plotar_perfil_longitudinal,
     plotar_secao_transversal,
+    plotar_volumes_dragagem,
 )
 
 def test_plotar_secao_transversal(monkeypatch):
@@ -84,3 +85,27 @@ def test_plotar_perfil_longitudinal(monkeypatch):
     assert eixo.get_ylabel() == "Profundidade (m)"
 
     plt.close()
+
+
+def test_plotar_volumes_dragagem(monkeypatch):
+    resultados = [
+        ("Estaca 0", 0.0, 10.5, 10.0, 0.0, False, 2.0),
+        ("Estaca 1", 100.0, 9.5, 10.0, 0.5, True, 4.0),
+        ("Estaca 2", 200.0, 10.5, 10.0, 0.0, False, 2.0),
+    ]
+
+    monkeypatch.setattr(plt, "show", lambda: None)
+
+    plotar_volumes_dragagem(
+        resultados_secoes=resultados,
+    )
+
+    eixo = plt.gca()
+
+    assert "Volumes de dragagem do canal" in eixo.get_title()
+    assert "600.00 m³" in eixo.get_title()
+    assert eixo.get_xlabel() == "Trecho do canal"
+    assert eixo.get_ylabel() == "Volume de dragagem (m³)"
+
+    plt.close()
+    
