@@ -62,6 +62,23 @@ def test_criar_secao_batimetrica():
     assert secao.pontos == pontos    
 
 
+def test_secao_batimetrica_com_coordenadas():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-20.0, 10.0),
+            PontoBatimetrico(0.0, 12.0),
+            PontoBatimetrico(20.0, 10.0),
+        ],
+        x=1000.0,
+        y=2000.0,
+    )
+
+    assert secao.x == pytest.approx(1000.0)
+    assert secao.y == pytest.approx(2000.0)
+
+
 def test_profundidade_secao_projeto_no_fundo():
     assert profundidade_secao_projeto(0, 20, 10, 2) == 10
 

@@ -211,6 +211,8 @@ secoes = [
             PontoBatimetrico(40.0, 11.5),
             PontoBatimetrico(50.0, 10.0),
         ],
+        x=0.0,
+        y=0.0,
     ),
     SecaoBatimetrica(
         identificacao="Estaca 1",
@@ -224,6 +226,8 @@ secoes = [
             PontoBatimetrico(40.0, 9.5),
             PontoBatimetrico(50.0, 8.0),
         ],
+        x=250.0,
+        y=0.0,
     ),
     SecaoBatimetrica(
         identificacao="Estaca 2",
@@ -237,6 +241,8 @@ secoes = [
             PontoBatimetrico(40.0, 10.0),
             PontoBatimetrico(50.0, 8.0),
         ],
+        x=495.0,
+        y=40.0,
     ),
     SecaoBatimetrica(
         identificacao="Estaca 3",
@@ -250,6 +256,8 @@ secoes = [
             PontoBatimetrico(40.0, 9.0),
             PontoBatimetrico(50.0, 8.0),
         ],
+        x=730.0,
+        y=120.0,
     ),
     SecaoBatimetrica(
         identificacao="Estaca 4",
@@ -263,6 +271,8 @@ secoes = [
             PontoBatimetrico(40.0, 10.0),
             PontoBatimetrico(50.0, 8.0),
         ],
+        x=950.0,
+        y=235.0,
     ),
 ]
 

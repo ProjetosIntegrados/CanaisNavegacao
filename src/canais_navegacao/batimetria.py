@@ -18,10 +18,14 @@ class SecaoBatimetrica:
         identificacao: str,
         distancia: float,
         pontos: list[PontoBatimetrico],
+        x: float | None = None,
+        y: float | None = None,
     ) -> None:
         self.identificacao = identificacao
         self.distancia = distancia
         self.pontos = pontos
+        self.x = x
+        self.y = y
 
 
 def profundidade_secao_projeto(
