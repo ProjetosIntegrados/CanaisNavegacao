@@ -33,6 +33,7 @@ from canais_navegacao.visualizacao import (
     plotar_secao_transversal,
     plotar_perfil_longitudinal,
     plotar_volumes_dragagem,
+    plotar_planta_canal,
 )
 
 
@@ -368,4 +369,11 @@ plotar_perfil_longitudinal(
 
 plotar_volumes_dragagem(
     resultados_secoes=resultados_secoes,
+)
+
+
+plotar_planta_canal(
+    secoes=secoes,
+    largura_requerida=largura_requerida,
+    diagnostico=diagnostico,
 )
