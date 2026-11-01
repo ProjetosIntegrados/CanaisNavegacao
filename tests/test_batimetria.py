@@ -940,4 +940,26 @@ def test_largura_disponivel_sem_ponto_exatamente_no_eixo():
     )
 
     assert resultado == pytest.approx(51.6666667)
-    
+
+
+def test_largura_disponivel_secao_totalmente_navegavel():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-50.0, 10.0),
+            PontoBatimetrico(-40.0, 11.5),
+            PontoBatimetrico(-30.0, 12.0),
+            PontoBatimetrico(0.0, 12.5),
+            PontoBatimetrico(30.0, 12.0),
+            PontoBatimetrico(40.0, 11.5),
+            PontoBatimetrico(50.0, 10.0),
+        ],
+    )
+
+    largura = calcular_largura_disponivel(
+        secao=secao,
+        profundidade_requerida=6.348,
+    )
+
+    assert largura == 100.0    

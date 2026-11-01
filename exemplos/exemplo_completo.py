@@ -5,6 +5,7 @@ from canais_navegacao.hidrodinamica import (
     folga_abaixo_quilha,
     margem_manobrabilidade_minima,
     profundidade_requerida_bissecao,
+    determinar_intervalo_profundidade_requerida,
 )
 from canais_navegacao.dimensionamento_horizontal import (
     calcular_fator_auxilios_navegacao,
@@ -41,20 +42,22 @@ from canais_navegacao.visualizacao import (
 # DADOS DE ENTRADA
 # ============================================================
 
+# Dados da embarcação - Navio Graneleiro
 embarcacao = Embarcacao(
-    lpp=200.0,
-    boca=30.0,
-    calado=10.0,
-    cb=0.75,
+    lpp=167.0,
+    boca=29.4,
+    calado=9.92,
+    cb=0.80,
 )
+
+area_navio = 285.8
+
 
 canal = Canal(
     profundidade=12.0,
     comprimento=1000.0,
     tipo="U",
 )
-
-area_navio = 120.0
 
 velocidade_ms = 5.0
 velocidade_nos = velocidade_ms * 1.94384
@@ -83,9 +86,19 @@ margem_minima = margem_manobrabilidade_minima(
     embarcacao.calado,
 )
 
+profundidade_inferior, profundidade_superior = (
+    determinar_intervalo_profundidade_requerida(
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=area_navio,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+    )
+)
+
 profundidade_requerida = profundidade_requerida_bissecao(
-    profundidade_inferior=11.0,
-    profundidade_superior=12.0,
+    profundidade_inferior=profundidade_inferior,
+    profundidade_superior=profundidade_superior,
     embarcacao=embarcacao,
     canal=canal,
     area_navio=area_navio,
@@ -346,7 +359,15 @@ for resultado in diagnostico:
 
 print("\nDragagem:")
 print(f"Seção crítica: {secao_critica[0]}")
-print(f"Trechos com necessidade de dragagem: {len(trechos_dragagem)}")
+quantidade_trechos_dragagem = sum(
+    necessita_dragagem
+    for _, _, necessita_dragagem in trechos_dragagem
+)
+
+print(
+    f"Trechos com necessidade de dragagem: "
+    f"{quantidade_trechos_dragagem}"
+)
 print(f"Volume total estimado: {volume_total:.2f} m³")
 
 

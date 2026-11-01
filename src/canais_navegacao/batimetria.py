@@ -581,6 +581,9 @@ def encontrar_limite_esquerdo_navegavel(
                 profundidade_requerida=profundidade_requerida,
             )
 
+    if pontos[0].profundidade >= profundidade_requerida:
+        return pontos[0].offset
+
     raise ValueError(
         "Nao foi encontrado limite esquerdo para a faixa navegavel."
     )
@@ -611,6 +614,9 @@ def encontrar_limite_direito_navegavel(
                 profundidade_final=ponto_final.profundidade,
                 profundidade_requerida=profundidade_requerida,
             )
+
+    if pontos[-1].profundidade >= profundidade_requerida:
+        return pontos[-1].offset
 
     raise ValueError(
         "Nao foi encontrado limite direito para a faixa navegavel."
