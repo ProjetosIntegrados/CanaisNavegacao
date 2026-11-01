@@ -229,4 +229,129 @@ def plotar_volumes_dragagem(
     plt.grid()
     plt.tight_layout()
     plt.show()
-    
+
+
+def calcular_direcao_secao(
+    secoes: list[SecaoBatimetrica],
+    indice: int,
+) -> tuple[float, float]:
+    """Calcula a direção local do eixo do canal em uma seção."""
+    if len(secoes) < 2:
+        raise ValueError("Sao necessarias pelo menos duas secoes.")
+
+    if indice == 0:
+        dx = secoes[1].x - secoes[0].x
+        dy = secoes[1].y - secoes[0].y
+    elif indice == len(secoes) - 1:
+        dx = secoes[-1].x - secoes[-2].x
+        dy = secoes[-1].y - secoes[-2].y
+    else:
+        dx = secoes[indice + 1].x - secoes[indice - 1].x
+        dy = secoes[indice + 1].y - secoes[indice - 1].y
+
+    comprimento = (dx ** 2 + dy ** 2) ** 0.5
+
+    if comprimento == 0:
+        raise ValueError("Nao foi possivel determinar a direcao do canal.")
+
+    return (
+        dx / comprimento,
+        dy / comprimento,
+    )
+
+
+def plotar_planta_canal(
+    secoes: list[SecaoBatimetrica],
+    largura_requerida: float,
+    diagnostico: list[tuple],
+) -> None:
+    """Plota o eixo, os limites e o diagnóstico do canal em planta."""
+    for secao in secoes:
+        if secao.x is None or secao.y is None:
+            raise ValueError(
+                "Todas as secoes devem possuir coordenadas X/Y."
+            )
+
+    if len(diagnostico) != len(secoes):
+        raise ValueError(
+            "O diagnostico deve possuir um resultado para cada secao."
+        )
+
+    coordenadas_x = [secao.x for secao in secoes]
+    coordenadas_y = [secao.y for secao in secoes]
+
+    limite_esquerdo_x = []
+    limite_esquerdo_y = []
+    limite_direito_x = []
+    limite_direito_y = []
+
+    meia_largura = largura_requerida / 2
+
+    for indice, secao in enumerate(secoes):
+        direcao_x, direcao_y = calcular_direcao_secao(
+            secoes=secoes,
+            indice=indice,
+        )
+
+        perpendicular_x = -direcao_y
+        perpendicular_y = direcao_x
+
+        esquerdo_x = secao.x + perpendicular_x * meia_largura
+        esquerdo_y = secao.y + perpendicular_y * meia_largura
+
+        direito_x = secao.x - perpendicular_x * meia_largura
+        direito_y = secao.y - perpendicular_y * meia_largura
+
+        limite_esquerdo_x.append(esquerdo_x)
+        limite_esquerdo_y.append(esquerdo_y)
+        limite_direito_x.append(direito_x)
+        limite_direito_y.append(direito_y)
+
+        plt.plot(
+            [esquerdo_x, direito_x],
+            [esquerdo_y, direito_y],
+            linestyle="--",
+        )
+
+        atende = diagnostico[indice][10]
+        situacao = "ATENDE" if atende else "NAO ATENDE"
+        marcador = "o" if atende else "x"
+
+        plt.scatter(
+            secao.x,
+            secao.y,
+            marker=marcador,
+        )
+
+        plt.text(
+            secao.x,
+            secao.y,
+            f" {secao.identificacao}\n {situacao}",
+        )
+
+    plt.plot(
+        coordenadas_x,
+        coordenadas_y,
+        label="Eixo do canal",
+    )
+
+    plt.plot(
+        limite_esquerdo_x,
+        limite_esquerdo_y,
+        label="Limite esquerdo",
+    )
+
+    plt.plot(
+        limite_direito_x,
+        limite_direito_y,
+        label="Limite direito",
+    )
+
+    plt.xlabel("X (m)")
+    plt.ylabel("Y (m)")
+    plt.title("Planta do canal")
+    plt.legend()
+    plt.grid()
+    plt.axis("equal")
+    plt.tight_layout()
+    plt.show()
