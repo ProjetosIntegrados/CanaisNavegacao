@@ -204,7 +204,7 @@ def calcular_squats_aplicaveis(
     relacao_lb: float,
     relacao_lt: float,
     cb: float,
-    bloqueio: float,
+    bloqueio: float | None,
     froude_profundidade: float,
     velocidade_ms: float,
     velocidade_nos: float,
@@ -231,27 +231,28 @@ def calcular_squats_aplicaveis(
             froude_profundidade=froude_profundidade,
         )
 
-
-    barrass_valido = verificar_validade_barrass3(
-        relacao_ht=relacao_ht,
-        bloqueio=bloqueio,
-        cb=cb,
-    )
-
-    if tipo_canal in ("U", "R", "C") and barrass_valido:
-        resultados["Barrass3"] = squat_barrass3(
-            velocidade_nos=velocidade_nos,
+    if bloqueio is not None:
+        barrass_valido = verificar_validade_barrass3(
+            relacao_ht=relacao_ht,
+            bloqueio=bloqueio,
             cb=cb,
-            bloqueio=bloqueio,
         )
 
-
+        if tipo_canal in ("U", "R", "C") and barrass_valido:
+            resultados["Barrass3"] = squat_barrass3(
+                velocidade_nos=velocidade_nos,
+                cb=cb,
+                bloqueio=bloqueio,
+            )
     if tipo_canal in ("U", "R", "C"):
-        velocidade_equivalente = velocidade_equivalente_yoshimura(
-            velocidade=velocidade_ms,
-            bloqueio=bloqueio,
-            tipo_canal=tipo_canal,
-        )
+        if tipo_canal == "U":
+            velocidade_equivalente = velocidade_ms
+        else:
+            velocidade_equivalente = velocidade_equivalente_yoshimura(
+                velocidade=velocidade_ms,
+                bloqueio=bloqueio,
+                tipo_canal=tipo_canal,
+            )
 
         resultados["Yoshimura"] = squat_yoshimura(
             relacao_ht=relacao_ht,
@@ -335,41 +336,49 @@ def calcular_squat_na_profundidade(
         embarcacao.lpp,
         embarcacao.calado,
     )
+
     froude_profundidade = numero_froude_profundidade(
         velocidade_ms,
         profundidade,
     )
+
+    bloqueio = None
+
     if canal.tipo == "U":
-        if not verificar_largura_efetiva_canal_irrestrito(relacao_ht):
-            raise ValueError(
-                "Relação h/T fora da faixa da expressão da largura efetiva."
+        if verificar_largura_efetiva_canal_irrestrito(relacao_ht):
+            largura_efetiva = largura_efetiva_canal_irrestrito(
+                embarcacao.boca,
+                embarcacao.cb,
             )
 
-        largura_efetiva = largura_efetiva_canal_irrestrito(
-            embarcacao.boca,
-            embarcacao.cb,
-        )
+            area_canal = area_secao_canal(
+                largura_efetiva,
+                profundidade,
+            )
 
-        area_canal = area_secao_canal(
-            largura_efetiva,
-            profundidade,
-        )
+            bloqueio = fator_bloqueio(
+                area_navio,
+                area_canal,
+            )
     else:
         area_canal = area_secao_canal(
             canal.largura,
             profundidade,
             canal.talude,
-        )    
-    bloqueio = fator_bloqueio(
-        area_navio,
-        area_canal,
-    )
+        )
+
+        bloqueio = fator_bloqueio(
+            area_navio,
+            area_canal,
+        )
+
     deslocamento = volume_deslocamento(
         embarcacao.lpp,
         embarcacao.boca,
         embarcacao.calado,
         embarcacao.cb,
     )
+
     resultados = calcular_squats_aplicaveis(
         tipo_canal=canal.tipo,
         relacao_ht=relacao_ht,
@@ -384,9 +393,10 @@ def calcular_squat_na_profundidade(
         volume_deslocamento=deslocamento,
         lpp=embarcacao.lpp,
     )
+
     metodo, squat = selecionar_squat_conservador(resultados)
 
-    return metodo, squat        
+    return metodo, squat
 
 
 def avaliar_profundidade(
@@ -414,6 +424,51 @@ def avaliar_profundidade(
         calado=embarcacao.calado,
         squat=squat,
         margem_minima=margem_minima,
+    )
+
+
+def determinar_intervalo_profundidade_requerida(
+    embarcacao: Embarcacao,
+    canal: Canal,
+    area_navio: float,
+    velocidade_ms: float,
+    velocidade_nos: float,
+    incremento: float = 1.0,
+    max_iteracoes: int = 100,
+) -> tuple[float, float]:
+    """Determina automaticamente um intervalo que contenha a profundidade requerida."""
+    profundidade_inferior = embarcacao.calado * 1.01
+
+    valor_inferior = avaliar_profundidade(
+        profundidade=profundidade_inferior,
+        embarcacao=embarcacao,
+        canal=canal,
+        area_navio=area_navio,
+        velocidade_ms=velocidade_ms,
+        velocidade_nos=velocidade_nos,
+    )
+
+    profundidade_superior = profundidade_inferior + incremento
+
+    for _ in range(max_iteracoes):
+        valor_superior = avaliar_profundidade(
+            profundidade=profundidade_superior,
+            embarcacao=embarcacao,
+            canal=canal,
+            area_navio=area_navio,
+            velocidade_ms=velocidade_ms,
+            velocidade_nos=velocidade_nos,
+        )
+
+        if valor_inferior * valor_superior <= 0:
+            return profundidade_inferior, profundidade_superior
+
+        profundidade_inferior = profundidade_superior
+        valor_inferior = valor_superior
+        profundidade_superior += incremento
+
+    raise ValueError(
+        "Não foi possível determinar um intervalo para a profundidade requerida."
     )
 
 
