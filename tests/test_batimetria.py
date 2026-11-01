@@ -774,6 +774,31 @@ def test_analisar_secao_horizontal():
     assert resultado[4] == pytest.approx(6.6666667)
     assert resultado[5] is False
 
+def test_analisar_secao_horizontal_eixo_sem_profundidade_suficiente():
+    secao = SecaoBatimetrica(
+        identificacao="Estaca 0",
+        distancia=0.0,
+        pontos=[
+            PontoBatimetrico(-40.0, 8.0),
+            PontoBatimetrico(-20.0, 11.0),
+            PontoBatimetrico(0.0, 8.0),
+            PontoBatimetrico(20.0, 11.0),
+            PontoBatimetrico(40.0, 8.0),
+        ],
+    )
+
+    resultado = analisar_secao_horizontal(
+        secao=secao,
+        profundidade_requerida=10.0,
+        largura_requerida=60.0,
+    )
+
+    assert resultado[0] == "Estaca 0"
+    assert resultado[1] == pytest.approx(0.0)
+    assert resultado[2] == pytest.approx(0.0)
+    assert resultado[3] == pytest.approx(60.0)
+    assert resultado[4] == pytest.approx(60.0)
+    assert resultado[5] is False
 
 def test_analisar_secoes_horizontais():
     secao_1 = SecaoBatimetrica(
