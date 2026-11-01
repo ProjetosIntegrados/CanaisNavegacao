@@ -680,10 +680,16 @@ def analisar_secao_horizontal(
     largura_requerida: float,
 ) -> tuple[str, float, float, float, float, bool]:
     """Analisa a condição horizontal de uma seção batimétrica."""
-    largura_disponivel = calcular_largura_disponivel(
-        secao=secao,
-        profundidade_requerida=profundidade_requerida,
-    )
+    try:
+        largura_disponivel = calcular_largura_disponivel(
+            secao=secao,
+            profundidade_requerida=profundidade_requerida,
+        )
+    except ValueError as erro:
+        if str(erro) != "O eixo do canal nao possui profundidade suficiente.":
+            raise
+
+        largura_disponivel = 0.0
 
     deficit = calcular_deficit_largura(
         largura_disponivel=largura_disponivel,
@@ -691,6 +697,15 @@ def analisar_secao_horizontal(
     )
 
     atende = deficit == 0
+
+    return (
+        secao.identificacao,
+        secao.distancia,
+        largura_disponivel,
+        largura_requerida,
+        deficit,
+        atende,
+    )
 
     return (
         secao.identificacao,
