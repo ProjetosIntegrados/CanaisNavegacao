@@ -42,24 +42,40 @@ from canais_navegacao.visualizacao import (
 # DADOS DE ENTRADA
 # ============================================================
 
-# Dados da embarcação - Navio Graneleiro
-embarcacao = Embarcacao(
-    lpp=167.0,
-    boca=29.4,
-    calado=9.92,
-    cb=0.80,
-)
+# ============================================================
+# EMBARCAÇÃO DO EXEMPLO
+# ============================================================
 
-area_navio = 285.8
+navio_exemplo = "gaseiro"
 
+if navio_exemplo == "gaseiro":
+    embarcacao = Embarcacao(
+        lpp=90.0,
+        boca=16.8,
+        calado=5.0,
+        cb=0.70,
+    )
+    area_navio = 82.3
+
+elif navio_exemplo == "graneleiro":
+    embarcacao = Embarcacao(
+        lpp=167.0,
+        boca=29.4,
+        calado=9.92,
+        cb=0.80,
+    )
+    area_navio = 285.8
+
+else:
+    raise ValueError(f"Embarcação de exemplo desconhecida: {navio_exemplo}")
 
 canal = Canal(
-    profundidade=12.0,
-    comprimento=1000.0,
+    profundidade=6.0,
+    comprimento=400.0,
     tipo="U",
 )
 
-velocidade_ms = 5.0
+velocidade_ms = 3.0867
 velocidade_nos = velocidade_ms * 1.94384
 
 
@@ -217,76 +233,76 @@ secoes = [
         identificacao="Estaca 0",
         distancia=0.0,
         pontos=[
-            PontoBatimetrico(-50.0, 10.0),
-            PontoBatimetrico(-40.0, 11.5),
-            PontoBatimetrico(-30.0, 12.0),
-            PontoBatimetrico(0.0, 12.5),
-            PontoBatimetrico(30.0, 12.0),
-            PontoBatimetrico(40.0, 11.5),
-            PontoBatimetrico(50.0, 10.0),
+            PontoBatimetrico(-30.0, 3.5),
+            PontoBatimetrico(-25.0, 5.2),
+            PontoBatimetrico(-20.0, 6.0),
+            PontoBatimetrico(0.0, 6.4),
+            PontoBatimetrico(20.0, 6.0),
+            PontoBatimetrico(25.0, 5.2),
+            PontoBatimetrico(30.0, 3.5),
         ],
         x=0.0,
         y=0.0,
     ),
     SecaoBatimetrica(
         identificacao="Estaca 1",
-        distancia=250.0,
+        distancia=100.0,
         pontos=[
-            PontoBatimetrico(-50.0, 8.0),
-            PontoBatimetrico(-40.0, 9.5),
-            PontoBatimetrico(-30.0, 10.8),
-            PontoBatimetrico(0.0, 11.5),
-            PontoBatimetrico(30.0, 10.8),
-            PontoBatimetrico(40.0, 9.5),
-            PontoBatimetrico(50.0, 8.0),
+            PontoBatimetrico(-30.0, 3.3),
+            PontoBatimetrico(-25.0, 5.0),
+            PontoBatimetrico(-20.0, 5.8),
+            PontoBatimetrico(0.0, 6.1),
+            PontoBatimetrico(20.0, 5.8),
+            PontoBatimetrico(25.0, 5.0),
+            PontoBatimetrico(30.0, 3.3),
         ],
-        x=250.0,
-        y=0.0,
+        x=83.0,
+        y=56.0,
     ),
     SecaoBatimetrica(
         identificacao="Estaca 2",
-        distancia=500.0,
+        distancia=200.0,
         pontos=[
-            PontoBatimetrico(-50.0, 8.0),
-            PontoBatimetrico(-40.0, 10.0),
-            PontoBatimetrico(-30.0, 11.3),
-            PontoBatimetrico(0.0, 11.8),
-            PontoBatimetrico(30.0, 11.3),
-            PontoBatimetrico(40.0, 10.0),
-            PontoBatimetrico(50.0, 8.0),
+            PontoBatimetrico(-30.0, 3.2),
+            PontoBatimetrico(-25.0, 4.8),
+            PontoBatimetrico(-20.0, 5.5),
+            PontoBatimetrico(0.0, 5.85),
+            PontoBatimetrico(20.0, 5.5),
+            PontoBatimetrico(25.0, 4.8),
+            PontoBatimetrico(30.0, 3.2),
         ],
-        x=495.0,
-        y=40.0,
+        x=166.0,
+        y=113.0,
     ),
     SecaoBatimetrica(
         identificacao="Estaca 3",
-        distancia=750.0,
+        distancia=300.0,
         pontos=[
-            PontoBatimetrico(-50.0, 8.0),
-            PontoBatimetrico(-40.0, 9.0),
-            PontoBatimetrico(-30.0, 10.5),
-            PontoBatimetrico(0.0, 11.0),
-            PontoBatimetrico(30.0, 10.5),
-            PontoBatimetrico(40.0, 9.0),
-            PontoBatimetrico(50.0, 8.0),
+            PontoBatimetrico(-30.0, 3.0),
+            PontoBatimetrico(-25.0, 4.6),
+            PontoBatimetrico(-20.0, 5.3),
+            PontoBatimetrico(0.0, 5.6),
+            PontoBatimetrico(20.0, 5.3),
+            PontoBatimetrico(25.0, 4.6),
+            PontoBatimetrico(30.0, 3.0),
         ],
-        x=730.0,
-        y=120.0,
+        x=249.0,
+        y=169.0,
     ),
     SecaoBatimetrica(
         identificacao="Estaca 4",
-        distancia=1000.0,
+        distancia=400.0,
         pontos=[
-            PontoBatimetrico(-50.0, 8.0),
-            PontoBatimetrico(-40.0, 10.0),
-            PontoBatimetrico(-30.0, 11.5),
-            PontoBatimetrico(0.0, 12.0),
-            PontoBatimetrico(30.0, 11.5),
-            PontoBatimetrico(40.0, 10.0),
-            PontoBatimetrico(50.0, 8.0),
+            PontoBatimetrico(-30.0, 3.2),
+            PontoBatimetrico(-25.0, 4.9),
+            PontoBatimetrico(-20.0, 5.7),
+            PontoBatimetrico(0.0, 6.05),
+            PontoBatimetrico(20.0, 5.7),
+            PontoBatimetrico(25.0, 4.9),
+            PontoBatimetrico(30.0, 3.2),
         ],
-        x=950.0,
-        y=235.0,
+        x=332.0,
+        y=225.0,
     ),
 ]
 
