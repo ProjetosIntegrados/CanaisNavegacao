@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "canais_navegacao"
-version = "0.1.0"
+version = "1.0.0"
 description = "Ferramenta computacional para análise e pré-dimensionamento de canais de navegação em águas rasas."
 authors = ["Bruno Carlotto Rezende"]
 license = "MIT"
